@@ -37,7 +37,7 @@ function AdminOrders() {
           localStorage.getItem("lana_token");
 
         const response = await fetch(
-          "http://localhost:5000/api/admin/orders",
+          " https://lana-wardrobe-production.up.railway.app/api/admin/orders",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -263,7 +263,7 @@ function AdminOrders() {
         );
 
       const response = await fetch(
-        `http://localhost:5000/api/admin/orders/${orderId}/status`,
+        ` https://lana-wardrobe-production.up.railway.app/api/admin/orders/${orderId}/status`,
         {
           method: "PUT",
 
@@ -419,7 +419,7 @@ function AdminOrders() {
         );
 
       const response = await fetch(
-        `http://localhost:5000/api/admin/orders/${orderId}/tracking`,
+        ` https://lana-wardrobe-production.up.railway.app/api/admin/orders/${orderId}/tracking`,
         {
           method: "PUT",
 
@@ -1093,7 +1093,7 @@ function AdminOrders() {
                                         "http"
                                       )
                                         ? item.image_url
-                                        : `http://localhost:5000${item.image_url}`
+                                        : ` https://lana-wardrobe-production.up.railway.app${item.image_url}`
                                     }
                                     alt={
                                       item.product_name

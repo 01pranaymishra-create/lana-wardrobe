@@ -21,7 +21,7 @@ function AdminDashboard() {
         const token = localStorage.getItem("lana_token");
 
         const response = await fetch(
-          "http://localhost:5000/api/admin/dashboard-summary",
+          " https://lana-wardrobe-production.up.railway.app/api/admin/dashboard-summary",
           {
             headers: {
               Authorization: `Bearer ${token}`,

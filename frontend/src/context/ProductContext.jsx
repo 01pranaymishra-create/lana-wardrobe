@@ -13,7 +13,7 @@ export function ProductProvider({ children }) {
         setLoading(true);
 
         const response = await fetch(
-          "http://localhost:5000/api/products"
+          " https://lana-wardrobe-production.up.railway.app/api/products"
         );
 
         if (!response.ok) {

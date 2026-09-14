@@ -42,7 +42,7 @@ function VerifyEmail() {
       setSubmitting(true);
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/verify-email-otp",
+        " https://lana-wardrobe-production.up.railway.app/api/auth/verify-email-otp",
         {
           method: "POST",
 
@@ -100,7 +100,7 @@ function VerifyEmail() {
       setResending(true);
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/resend-email-otp",
+        " https://lana-wardrobe-production.up.railway.app/api/auth/resend-email-otp",
         {
           method: "POST",
 

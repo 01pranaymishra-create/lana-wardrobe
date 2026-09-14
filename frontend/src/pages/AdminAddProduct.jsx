@@ -54,7 +54,7 @@ function AdminAddProduct() {
         .filter(Boolean);
 
       const response = await fetch(
-        "http://localhost:5000/api/admin/products",
+        " https://lana-wardrobe-production.up.railway.app/api/admin/products",
         {
           method: "POST",
 

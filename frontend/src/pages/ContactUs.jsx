@@ -44,7 +44,7 @@ function ContactUs() {
       setSubmitting(true);
 
       const response = await fetch(
-        "http://localhost:5000/api/contact-messages",
+        " https://lana-wardrobe-production.up.railway.app/api/contact-messages",
         {
           method: "POST",
           headers: {

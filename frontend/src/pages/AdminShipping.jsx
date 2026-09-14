@@ -69,7 +69,7 @@ function AdminShipping() {
         shipmentsResponse,
       ] = await Promise.all([
         fetch(
-          "http://localhost:5000/api/admin/shipping/ready-orders",
+          " https://lana-wardrobe-production.up.railway.app/api/admin/shipping/ready-orders",
           {
             headers: {
               Authorization:
@@ -79,7 +79,7 @@ function AdminShipping() {
         ),
 
         fetch(
-          "http://localhost:5000/api/admin/shipments",
+          " https://lana-wardrobe-production.up.railway.app/api/admin/shipments",
           {
             headers: {
               Authorization:
@@ -312,7 +312,7 @@ function AdminShipping() {
 
         const response =
           await fetch(
-            "http://localhost:5000/api/admin/shipments",
+            " https://lana-wardrobe-production.up.railway.app/api/admin/shipments",
             {
               method: "POST",
 
@@ -574,7 +574,7 @@ function AdminShipping() {
 
         const response =
           await fetch(
-            `http://localhost:5000/api/admin/shipments/${shipment.id}`,
+            ` https://lana-wardrobe-production.up.railway.app/api/admin/shipments/${shipment.id}`,
             {
               method: "PUT",
 

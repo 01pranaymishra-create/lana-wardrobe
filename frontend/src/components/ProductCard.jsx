@@ -13,7 +13,7 @@ function ProductCard({ product }) {
               src={
                 product.imageUrl.startsWith("http")
                   ? product.imageUrl
-                  : `http://localhost:5000${product.imageUrl}`
+                  : ` https://lana-wardrobe-production.up.railway.app${product.imageUrl}`
               }
               alt={product.name}
               className="product-image"

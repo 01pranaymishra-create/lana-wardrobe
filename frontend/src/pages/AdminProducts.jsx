@@ -13,7 +13,7 @@ function AdminProducts() {
           localStorage.getItem("lana_token");
 
         const response = await fetch(
-          "http://localhost:5000/api/admin/products",
+          " https://lana-wardrobe-production.up.railway.app/api/admin/products",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -70,7 +70,7 @@ function AdminProducts() {
         localStorage.getItem("lana_token");
 
       const response = await fetch(
-        `http://localhost:5000/api/admin/products/${productId}`,
+        ` https://lana-wardrobe-production.up.railway.app/api/admin/products/${productId}`,
         {
           method: "DELETE",
           headers: {
@@ -180,7 +180,7 @@ function AdminProducts() {
                         "http"
                       )
                         ? product.image_url
-                        : `http://localhost:5000${product.image_url}`
+                        : ` https://lana-wardrobe-production.up.railway.app${product.image_url}`
                     }
                     alt={product.name}
                   />

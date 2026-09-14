@@ -38,7 +38,7 @@ const redirectPath =
       setSubmitting(true);
 
       const response = await fetch(
-        "http://localhost:5000/api/auth/login",
+        " https://lana-wardrobe-production.up.railway.app/api/auth/login",
         {
           method: "POST",
           headers: {

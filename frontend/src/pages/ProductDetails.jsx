@@ -136,7 +136,7 @@ function ProductDetails() {
         try {
           const response =
             await fetch(
-              `http://localhost:5000/api/products/${id}/images`
+              ` https://lana-wardrobe-production.up.railway.app/api/products/${id}/images`
             );
 
           const data =
@@ -194,7 +194,7 @@ function ProductDetails() {
 
         const response =
           await fetch(
-            `http://localhost:5000/api/products/${id}/reviews`
+            ` https://lana-wardrobe-production.up.railway.app/api/products/${id}/reviews`
           );
 
         const data =
@@ -282,7 +282,7 @@ function ProductDetails() {
 
         const response =
           await fetch(
-            `http://localhost:5000/api/products/${id}/reviews`,
+            ` https://lana-wardrobe-production.up.railway.app/api/products/${id}/reviews`,
             {
               method: "POST",
 
@@ -436,7 +436,7 @@ function ProductDetails() {
                     "http"
                   )
                     ? selectedImage
-                    : `http://localhost:5000${selectedImage}`
+                    : ` https://lana-wardrobe-production.up.railway.app${selectedImage}`
                 }
                 alt={
                   product.name
@@ -483,7 +483,7 @@ function ProductDetails() {
                           "http"
                         )
                           ? image.image_url
-                          : `http://localhost:5000${image.image_url}`
+                          : ` https://lana-wardrobe-production.up.railway.app${image.image_url}`
                       }
 
                       alt={

@@ -92,7 +92,7 @@ const handleSubmit = async (e) => {
     // =========================
 
     const response = await fetch(
-      "http://localhost:5000/api/orders",
+      " https://lana-wardrobe-production.up.railway.app/api/orders",
       {
         method: "POST",
 
@@ -198,7 +198,7 @@ const handleSubmit = async (e) => {
 
     const razorpayResponse =
       await fetch(
-        "http://localhost:5000/api/payments/create-razorpay-order",
+        " https://lana-wardrobe-production.up.railway.app/api/payments/create-razorpay-order",
         {
           method: "POST",
 
@@ -277,7 +277,7 @@ const handleSubmit = async (e) => {
         try {
           const verifyResponse =
             await fetch(
-              "http://localhost:5000/api/payments/verify-razorpay-payment",
+              " https://lana-wardrobe-production.up.railway.app/api/payments/verify-razorpay-payment",
               {
                 method: "POST",
 

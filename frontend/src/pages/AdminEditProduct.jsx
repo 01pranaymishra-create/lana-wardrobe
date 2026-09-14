@@ -56,7 +56,7 @@ function AdminEditProduct() {
     async () => {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/products/${id}/images`
+          ` https://lana-wardrobe-production.up.railway.app/api/products/${id}/images`
         );
 
         const data = await response.json();
@@ -94,7 +94,7 @@ function AdminEditProduct() {
           );
 
         const response = await fetch(
-          `http://localhost:5000/api/admin/products/${id}`,
+          ` https://lana-wardrobe-production.up.railway.app/api/admin/products/${id}`,
           {
             headers: {
               Authorization:
@@ -301,7 +301,7 @@ function AdminEditProduct() {
 
         const response =
           await fetch(
-            `http://localhost:5000/api/admin/products/${id}/images`,
+            ` https://lana-wardrobe-production.up.railway.app/api/admin/products/${id}/images`,
             {
               method: "POST",
 
@@ -364,7 +364,7 @@ const handleSetPrimary = async (imageId) => {
     const token = localStorage.getItem("lana_token");
 
     const response = await fetch(
-      `http://localhost:5000/api/admin/products/${id}/images/${imageId}/primary`,
+      ` https://lana-wardrobe-production.up.railway.app/api/admin/products/${id}/images/${imageId}/primary`,
       {
         method: "PUT",
         headers: {
@@ -407,7 +407,7 @@ const handleDeleteImage = async (imageId) => {
     const token = localStorage.getItem("lana_token");
 
     const response = await fetch(
-      `http://localhost:5000/api/admin/products/${id}/images/${imageId}`,
+      ` https://lana-wardrobe-production.up.railway.app/api/admin/products/${id}/images/${imageId}`,
       {
         method: "DELETE",
         headers: {
@@ -472,7 +472,7 @@ const handleDeleteImage = async (imageId) => {
 
         const response =
           await fetch(
-            `http://localhost:5000/api/admin/products/${id}`,
+            ` https://lana-wardrobe-production.up.railway.app/api/admin/products/${id}`,
             {
               method: "PUT",
 
@@ -787,7 +787,7 @@ const handleDeleteImage = async (imageId) => {
       src={
         image.image_url.startsWith("http")
           ? image.image_url
-          : `http://localhost:5000${image.image_url}`
+          : ` https://lana-wardrobe-production.up.railway.app${image.image_url}`
       }
       alt="Product"
     />

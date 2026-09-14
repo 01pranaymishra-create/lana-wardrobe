@@ -56,7 +56,7 @@ function YourOrders() {
           );
 
         const response = await fetch(
-          "http://localhost:5000/api/orders/my-orders",
+          " https://lana-wardrobe-production.up.railway.app/api/orders/my-orders",
           {
             headers: {
               Authorization:
@@ -377,7 +377,7 @@ function YourOrders() {
                                     "http"
                                   )
                                     ? item.image_url
-                                    : `http://localhost:5000${item.image_url}`
+                                    : ` https://lana-wardrobe-production.up.railway.app${item.image_url}`
                                 }
                                 alt={
                                   item.product_name

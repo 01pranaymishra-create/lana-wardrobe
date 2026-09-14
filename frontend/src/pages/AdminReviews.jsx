@@ -34,7 +34,7 @@ function AdminReviews() {
 
         const response =
           await fetch(
-            "http://localhost:5000/api/admin/reviews",
+            " https://lana-wardrobe-production.up.railway.app/api/admin/reviews",
             {
               headers: {
                 Authorization:
@@ -107,7 +107,7 @@ function AdminReviews() {
 
         const response =
           await fetch(
-            `http://localhost:5000/api/admin/reviews/${review.id}/status`,
+            ` https://lana-wardrobe-production.up.railway.app/api/admin/reviews/${review.id}/status`,
             {
               method: "PUT",
 
@@ -205,7 +205,7 @@ function AdminReviews() {
 
       const response =
         await fetch(
-          `http://localhost:5000/api/admin/reviews/${review.id}`,
+          ` https://lana-wardrobe-production.up.railway.app/api/admin/reviews/${review.id}`,
           {
             method: "DELETE",
 

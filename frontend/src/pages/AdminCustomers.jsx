@@ -30,7 +30,7 @@ function AdminCustomers() {
 
           const response =
             await fetch(
-              "http://localhost:5000/api/admin/customers",
+              " https://lana-wardrobe-production.up.railway.app/api/admin/customers",
               {
                 headers: {
                   Authorization:
@@ -151,7 +151,7 @@ const handleToggleStatus =
 
       const response =
         await fetch(
-          `http://localhost:5000/api/admin/customers/${customer.id}/status`,
+          ` https://lana-wardrobe-production.up.railway.app/api/admin/customers/${customer.id}/status`,
           {
             method: "PUT",
 

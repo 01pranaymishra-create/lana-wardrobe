@@ -200,7 +200,7 @@ const handleSubmit = async (event) => {
     }
 
     const response = await fetch(
-      "http://localhost:5000/api/bulk-order-requests",
+      " https://lana-wardrobe-production.up.railway.app/api/bulk-order-requests",
       {
         method: "POST",
         body: requestData,
