@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
 function Cart() {
@@ -31,7 +31,7 @@ function Cart() {
           </p>
 
           <Link to="/shop" className="shop-button">
-            CONTINUE SHOPPING â†’
+            CONTINUE SHOPPING →
           </Link>
         </section>
       ) : (
@@ -73,7 +73,7 @@ function Cart() {
                         )
                       }
                     >
-                      âˆ’
+                      −
                     </button>
 
                     <span>{item.quantity}</span>
@@ -91,7 +91,7 @@ function Cart() {
                   </div>
 
                   <strong>
-                    â‚¹
+                    ₹
                     {(item.discountPrice || item.price) *
                       item.quantity}
                   </strong>
@@ -114,7 +114,7 @@ function Cart() {
 
             <div className="summary-row">
               <span>Subtotal</span>
-              <strong>â‚¹{subtotal}</strong>
+              <strong>₹{subtotal}</strong>
             </div>
 
             <p className="shipping-note">

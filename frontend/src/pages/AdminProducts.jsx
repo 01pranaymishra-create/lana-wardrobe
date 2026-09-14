@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 function AdminProducts() {
@@ -204,12 +204,12 @@ function AdminProducts() {
                 </p>
 
                 <p>
-                  Price: â‚¹{product.price}
+                  Price: ₹{product.price}
                 </p>
 
                 {product.discount_price && (
                   <p>
-                    Discount Price: â‚¹
+                    Discount Price: ₹
                     {product.discount_price}
                   </p>
                 )}

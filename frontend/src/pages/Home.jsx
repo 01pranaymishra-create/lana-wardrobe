@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import banner1 from "../assets/banner1.jpeg";
 import banner2 from "../assets/banner2.jpeg";
@@ -78,7 +78,7 @@ if (error) {
           </p>
 
           <Link to="/shop" className="shop-button">
-            SHOP NOW â†’
+            SHOP NOW →
           </Link>
         </div>
 
@@ -95,7 +95,7 @@ if (error) {
     <div className="promo-overlay">
       <p>{banners[currentBanner].title}</p>
       <h2>{banners[currentBanner].subtitle}</h2>
-      <span>Explore Now â†’</span>
+      <span>Explore Now →</span>
     </div>
   </Link>
 
@@ -128,19 +128,19 @@ if (error) {
   <Link to="/category/men" className="category-card">
     <div className="category-placeholder">MEN</div>
     <h3>Men</h3>
-    <p>Explore Collection â†’</p>
+    <p>Explore Collection →</p>
   </Link>
 
   <Link to="/category/women" className="category-card">
     <div className="category-placeholder">WOMEN</div>
     <h3>Women</h3>
-    <p>Explore Collection â†’</p>
+    <p>Explore Collection →</p>
   </Link>
 
   <Link to="/category/unisex" className="category-card">
     <div className="category-placeholder">UNISEX</div>
     <h3>Unisex</h3>
-    <p>Explore Collection â†’</p>
+    <p>Explore Collection →</p>
   </Link>
 
   <Link to="/category/sports" className="category-card">
@@ -148,13 +148,13 @@ if (error) {
       SPORTS T-SHIRTS
     </div>
     <h3>Sports T-Shirts</h3>
-    <p>Explore Collection â†’</p>
+    <p>Explore Collection →</p>
   </Link>
 
   <Link to="/customize" className="category-card">
     <div className="category-placeholder">CUSTOMIZE</div>
     <h3>Customize T-Shirt</h3>
-    <p>Create Your Own â†’</p>
+    <p>Create Your Own →</p>
   </Link>
 </div>        
       </section>
@@ -177,7 +177,7 @@ if (error) {
 
   <div className="featured-view-all">
     <Link to="/shop" className="shop-button">
-      VIEW ALL PRODUCTS â†’
+      VIEW ALL PRODUCTS →
     </Link>
   </div>
 </section>

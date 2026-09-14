@@ -1,4 +1,4 @@
-﻿import "./ShippingReturns.css";
+import "./ShippingReturns.css";
 
 function PrivacyPolicy() {
   return (

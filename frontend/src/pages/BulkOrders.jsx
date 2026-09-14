@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 function BulkOrders() {
@@ -664,7 +664,7 @@ const handleSubmit = async (event) => {
             type="submit"
             className="customize-submit"
           >
-            REQUEST BULK QUOTATION â†’
+            REQUEST BULK QUOTATION →
           </button>
 
         </form>

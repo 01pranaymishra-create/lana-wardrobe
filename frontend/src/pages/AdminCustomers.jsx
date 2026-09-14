@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEffect,
   useMemo,
   useState,
@@ -342,7 +342,7 @@ const handleToggleStatus =
                       </td>
 
                       <td>
-                        â‚¹
+                        ₹
                         {Number(
                           customer.total_spent ||
                             0

@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useNavigate,
   useParams,
@@ -362,7 +362,7 @@ function ProductDetails() {
               : "review-star"
           }
         >
-          â˜…
+          ★
         </span>
       )
     );
@@ -546,14 +546,14 @@ function ProductDetails() {
           <div className="details-price">
 
             <span className="details-sale-price">
-              â‚¹
+              ₹
               {product.discountPrice ||
                 product.price}
             </span>
 
             {product.discountPrice && (
               <span className="details-original-price">
-                â‚¹{product.price}
+                ₹{product.price}
               </span>
             )}
 
@@ -664,7 +664,7 @@ function ProductDetails() {
                   )
                 }
               >
-                âˆ’
+                −
               </button>
 
               <span>
@@ -787,8 +787,8 @@ function ProductDetails() {
               }}
             >
               {productIsInWishlist
-                ? "â™¥ REMOVE FROM WISHLIST"
-                : "â™¡ ADD TO WISHLIST"}
+                ? "♥ REMOVE FROM WISHLIST"
+                : "♡ ADD TO WISHLIST"}
             </button>
 
           </div>
@@ -863,7 +863,7 @@ function ProductDetails() {
                     className="review-breakdown-row"
                   >
                     <span>
-                      {star} â˜…
+                      {star} ★
                     </span>
 
                     <div className="review-progress-bar">
@@ -987,7 +987,7 @@ function ProductDetails() {
                           )
                         }
                       >
-                        â˜…
+                        ★
                       </button>
                     )
                   )}
@@ -1124,7 +1124,7 @@ function ProductDetails() {
 
                       {review.is_verified_purchase && (
                         <span className="verified-purchase">
-                          âœ“ Verified
+                          ✓ Verified
                           Purchase
                         </span>
                       )}

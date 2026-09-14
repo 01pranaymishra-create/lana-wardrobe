@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEffect,
   useState,
 } from "react";
@@ -299,11 +299,11 @@ function AdminReviews() {
                   </p>
 
                   <div className="admin-review-stars">
-                    {"â˜…".repeat(
+                    {"★".repeat(
                       review.rating
                     )}
 
-                    {"â˜†".repeat(
+                    {"☆".repeat(
                       5 -
                         review.rating
                     )}
@@ -329,7 +329,7 @@ function AdminReviews() {
 
                     <span>
                       {review.is_verified_purchase
-                        ? "âœ“ Verified Purchase"
+                        ? "✓ Verified Purchase"
                         : "Not Verified"}
                     </span>
 

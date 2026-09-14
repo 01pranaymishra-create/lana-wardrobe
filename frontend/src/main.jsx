@@ -1,4 +1,4 @@
-﻿import { StrictMode } from "react";
+import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { ProductProvider } from "./context/ProductContext.jsx";
 import "./index.css";

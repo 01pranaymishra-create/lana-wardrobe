@@ -1,4 +1,4 @@
-﻿import { Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 function ProductCard({ product }) {
   return (
@@ -30,16 +30,16 @@ function ProductCard({ product }) {
             {product.discountPrice ? (
               <>
                 <span className="discount-price">
-                  â‚¹{product.discountPrice}
+                  ₹{product.discountPrice}
                 </span>
 
                 <span className="original-price">
-                  â‚¹{product.price}
+                  ₹{product.price}
                 </span>
               </>
             ) : (
               <span className="discount-price">
-                â‚¹{product.price}
+                ₹{product.price}
               </span>
             )}
           </div>

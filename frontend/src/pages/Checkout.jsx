@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useCart } from "../context/CartContext";
 
 function loadRazorpayScript() {
@@ -510,7 +510,7 @@ const handleSubmit = async (e) => {
   className="place-order-button"
 >
   {paymentMethod === "online"
-    ? `PAY â‚¹${total}`
+    ? `PAY ₹${total}`
     : "PLACE COD ORDER"}
 </button>
         </form>
@@ -535,7 +535,7 @@ const handleSubmit = async (e) => {
                 </div>
 
                 <strong>
-                  â‚¹
+                  ₹
                   {(item.discountPrice || item.price) *
                     item.quantity}
                 </strong>
@@ -545,19 +545,19 @@ const handleSubmit = async (e) => {
 
           <div className="checkout-total-row">
             <span>Subtotal</span>
-            <span>â‚¹{subtotal}</span>
+            <span>₹{subtotal}</span>
           </div>
 
           <div className="checkout-total-row">
             <span>Shipping</span>
             <span>
-              {shipping === 0 ? "FREE" : `â‚¹${shipping}`}
+              {shipping === 0 ? "FREE" : `₹${shipping}`}
             </span>
           </div>
 
           <div className="checkout-total-row checkout-grand-total">
             <strong>Total</strong>
-            <strong>â‚¹{total}</strong>
+            <strong>₹{total}</strong>
           </div>
         </aside>
       </section>

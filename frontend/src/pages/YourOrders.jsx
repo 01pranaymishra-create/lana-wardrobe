@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEffect,
   useState,
 } from "react";
@@ -229,7 +229,7 @@ function YourOrders() {
                     </span>
 
                     <strong>
-                      â‚¹
+                      ₹
                       {
                         order.total_amount
                       }
@@ -328,7 +328,7 @@ function YourOrders() {
                             <div className="order-progress-circle">
 
                               {completed
-                                ? "âœ“"
+                                ? "✓"
                                 : index + 1}
 
                             </div>
@@ -426,7 +426,7 @@ function YourOrders() {
                         </Link>
 
                         <strong>
-                          â‚¹
+                          ₹
                           {
                             item.line_total
                           }
@@ -455,7 +455,7 @@ function YourOrders() {
                         order.shipping_charge
                       ) === 0
                         ? "FREE"
-                        : `â‚¹${order.shipping_charge}`}
+                        : `₹${order.shipping_charge}`}
                     </strong>
                   </div>
 

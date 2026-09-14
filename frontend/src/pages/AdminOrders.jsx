@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 function AdminOrders() {
   const [orders, setOrders] = useState([]);
@@ -721,7 +721,7 @@ function AdminOrders() {
                       </span>
 
                       <strong>
-                        â‚¹
+                        ₹
                         {
                           order.total_amount
                         }
@@ -1145,14 +1145,14 @@ function AdminOrders() {
                                 </p>
 
                                 <p>
-                                  Unit Price: â‚¹
+                                  Unit Price: ₹
                                   {
                                     item.unit_price
                                   }
                                 </p>
 
                                 <strong>
-                                  â‚¹
+                                  ₹
                                   {
                                     item.line_total
                                   }
@@ -1177,7 +1177,7 @@ function AdminOrders() {
                           </span>
 
                           <strong>
-                            â‚¹
+                            ₹
                             {
                               order.subtotal
                             }
@@ -1190,7 +1190,7 @@ function AdminOrders() {
                           </span>
 
                           <strong>
-                            â‚¹
+                            ₹
                             {
                               order.shipping_charge
                             }
@@ -1204,7 +1204,7 @@ function AdminOrders() {
                           </span>
 
                           <strong>
-                            â‚¹
+                            ₹
                             {
                               order.total_amount
                             }

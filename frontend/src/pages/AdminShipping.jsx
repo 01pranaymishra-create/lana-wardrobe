@@ -1,4 +1,4 @@
-﻿import {
+import {
   useEffect,
   useState,
 } from "react";
@@ -834,7 +834,7 @@ function AdminShipping() {
                         </span>
 
                         <strong>
-                          â‚¹
+                          ₹
                           {
                             order.total_amount
                           }
@@ -945,7 +945,7 @@ function AdminShipping() {
                                     {
                                       item.quantity
                                     }{" "}
-                                    Ã—{" "}
+                                    ×{" "}
                                     {
                                       item.product_name
                                     }
@@ -1042,7 +1042,7 @@ function AdminShipping() {
 
                             <div>
                               <label>
-                                Shipping Cost (â‚¹)
+                                Shipping Cost (₹)
                               </label>
 
                               <input
@@ -1416,7 +1416,7 @@ function AdminShipping() {
                               {shipment.length &&
                               shipment.width &&
                               shipment.height
-                                ? `${shipment.length} Ã— ${shipment.width} Ã— ${shipment.height} cm`
+                                ? `${shipment.length} × ${shipment.width} × ${shipment.height} cm`
                                 : "-"}
                             </strong>
                           </div>
@@ -1429,7 +1429,7 @@ function AdminShipping() {
                             <strong>
                               {shipment.shipping_cost !==
                               null
-                                ? `â‚¹${shipment.shipping_cost}`
+                                ? `₹${shipment.shipping_cost}`
                                 : "-"}
                             </strong>
                           </div>
@@ -1671,7 +1671,7 @@ function AdminShipping() {
                               <div>
 
                                 <label>
-                                  Shipping Cost (â‚¹)
+                                  Shipping Cost (₹)
                                 </label>
 
                                 <input

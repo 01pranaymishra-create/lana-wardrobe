@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -489,7 +489,7 @@ const handleSubmit = async (event) => {
             type="submit"
             className="customize-submit"
           >
-            REQUEST CUSTOMIZATION â†’
+            REQUEST CUSTOMIZATION →
           </button>
 
         </form>
