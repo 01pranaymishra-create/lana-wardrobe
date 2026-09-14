@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -125,7 +125,7 @@ const handleSubmit = async (event) => {
     }
 
     const response = await fetch(
-      " https://lana-wardrobe-production.up.railway.app/api/customization-requests",
+      "https://api.lanawardrobe.in/api/customization-requests",
       {
         method: "POST",
         body: requestData,
@@ -489,7 +489,7 @@ const handleSubmit = async (event) => {
             type="submit"
             className="customize-submit"
           >
-            REQUEST CUSTOMIZATION →
+            REQUEST CUSTOMIZATION â†’
           </button>
 
         </form>

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+﻿import { createContext, useContext, useEffect, useState } from "react";
 
 const ProductContext = createContext();
 
@@ -13,7 +13,7 @@ export function ProductProvider({ children }) {
         setLoading(true);
 
         const response = await fetch(
-          " https://lana-wardrobe-production.up.railway.app/api/products"
+          "https://api.lanawardrobe.in/api/products"
         );
 
         if (!response.ok) {

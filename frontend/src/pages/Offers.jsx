@@ -1,4 +1,4 @@
-import { useProducts } from "../context/ProductContext";
+﻿import { useProducts } from "../context/ProductContext";
 import ProductCard from "../components/ProductCard";
 
 function Offers() {

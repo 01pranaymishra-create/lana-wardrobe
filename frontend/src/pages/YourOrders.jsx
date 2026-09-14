@@ -1,4 +1,4 @@
-import {
+﻿import {
   useEffect,
   useState,
 } from "react";
@@ -56,7 +56,7 @@ function YourOrders() {
           );
 
         const response = await fetch(
-          " https://lana-wardrobe-production.up.railway.app/api/orders/my-orders",
+          "https://api.lanawardrobe.in/api/orders/my-orders",
           {
             headers: {
               Authorization:
@@ -229,7 +229,7 @@ function YourOrders() {
                     </span>
 
                     <strong>
-                      ₹
+                      â‚¹
                       {
                         order.total_amount
                       }
@@ -328,7 +328,7 @@ function YourOrders() {
                             <div className="order-progress-circle">
 
                               {completed
-                                ? "✓"
+                                ? "âœ“"
                                 : index + 1}
 
                             </div>
@@ -377,7 +377,7 @@ function YourOrders() {
                                     "http"
                                   )
                                     ? item.image_url
-                                    : ` https://lana-wardrobe-production.up.railway.app${item.image_url}`
+                                    : `https://api.lanawardrobe.in${item.image_url}`
                                 }
                                 alt={
                                   item.product_name
@@ -426,7 +426,7 @@ function YourOrders() {
                         </Link>
 
                         <strong>
-                          ₹
+                          â‚¹
                           {
                             item.line_total
                           }
@@ -455,7 +455,7 @@ function YourOrders() {
                         order.shipping_charge
                       ) === 0
                         ? "FREE"
-                        : `₹${order.shipping_charge}`}
+                        : `â‚¹${order.shipping_charge}`}
                     </strong>
                   </div>
 

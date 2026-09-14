@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 
 function AdminOrders() {
   const [orders, setOrders] = useState([]);
@@ -37,7 +37,7 @@ function AdminOrders() {
           localStorage.getItem("lana_token");
 
         const response = await fetch(
-          " https://lana-wardrobe-production.up.railway.app/api/admin/orders",
+          "https://api.lanawardrobe.in/api/admin/orders",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -263,7 +263,7 @@ function AdminOrders() {
         );
 
       const response = await fetch(
-        ` https://lana-wardrobe-production.up.railway.app/api/admin/orders/${orderId}/status`,
+        `https://api.lanawardrobe.in/api/admin/orders/${orderId}/status`,
         {
           method: "PUT",
 
@@ -419,7 +419,7 @@ function AdminOrders() {
         );
 
       const response = await fetch(
-        ` https://lana-wardrobe-production.up.railway.app/api/admin/orders/${orderId}/tracking`,
+        `https://api.lanawardrobe.in/api/admin/orders/${orderId}/tracking`,
         {
           method: "PUT",
 
@@ -721,7 +721,7 @@ function AdminOrders() {
                       </span>
 
                       <strong>
-                        ₹
+                        â‚¹
                         {
                           order.total_amount
                         }
@@ -1093,7 +1093,7 @@ function AdminOrders() {
                                         "http"
                                       )
                                         ? item.image_url
-                                        : ` https://lana-wardrobe-production.up.railway.app${item.image_url}`
+                                        : `https://api.lanawardrobe.in${item.image_url}`
                                     }
                                     alt={
                                       item.product_name
@@ -1145,14 +1145,14 @@ function AdminOrders() {
                                 </p>
 
                                 <p>
-                                  Unit Price: ₹
+                                  Unit Price: â‚¹
                                   {
                                     item.unit_price
                                   }
                                 </p>
 
                                 <strong>
-                                  ₹
+                                  â‚¹
                                   {
                                     item.line_total
                                   }
@@ -1177,7 +1177,7 @@ function AdminOrders() {
                           </span>
 
                           <strong>
-                            ₹
+                            â‚¹
                             {
                               order.subtotal
                             }
@@ -1190,7 +1190,7 @@ function AdminOrders() {
                           </span>
 
                           <strong>
-                            ₹
+                            â‚¹
                             {
                               order.shipping_charge
                             }
@@ -1204,7 +1204,7 @@ function AdminOrders() {
                           </span>
 
                           <strong>
-                            ₹
+                            â‚¹
                             {
                               order.total_amount
                             }

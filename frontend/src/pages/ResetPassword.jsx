@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import {
   Link,
   useLocation,
@@ -63,7 +63,7 @@ function ResetPassword() {
       setSubmitting(true);
 
       const response = await fetch(
-        " https://lana-wardrobe-production.up.railway.app/api/auth/reset-password",
+        "https://api.lanawardrobe.in/api/auth/reset-password",
         {
           method: "POST",
           headers: {

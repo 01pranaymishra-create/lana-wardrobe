@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import "./ContactUs.css";
 
 function ContactUs() {
@@ -44,7 +44,7 @@ function ContactUs() {
       setSubmitting(true);
 
       const response = await fetch(
-        " https://lana-wardrobe-production.up.railway.app/api/contact-messages",
+        "https://api.lanawardrobe.in/api/contact-messages",
         {
           method: "POST",
           headers: {

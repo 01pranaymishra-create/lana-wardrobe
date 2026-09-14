@@ -1,4 +1,4 @@
-import "./AboutUs.css";
+﻿import "./AboutUs.css";
 
 function AboutUs() {
   return (
@@ -11,7 +11,7 @@ function AboutUs() {
         <p className="about-intro">
           Lana Wardrobe is built for people who want modern,
           comfortable and stylish fashion for everyday life.
-          Our focus is simple — good designs, easy shopping
+          Our focus is simple â€” good designs, easy shopping
           and clothing made for today's youth.
         </p>
       </section>

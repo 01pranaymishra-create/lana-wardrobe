@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function AdminAddProduct() {
@@ -54,7 +54,7 @@ function AdminAddProduct() {
         .filter(Boolean);
 
       const response = await fetch(
-        " https://lana-wardrobe-production.up.railway.app/api/admin/products",
+        "https://api.lanawardrobe.in/api/admin/products",
         {
           method: "POST",
 

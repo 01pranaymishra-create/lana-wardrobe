@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useCart } from "../context/CartContext";
 
 function loadRazorpayScript() {
@@ -92,7 +92,7 @@ const handleSubmit = async (e) => {
     // =========================
 
     const response = await fetch(
-      " https://lana-wardrobe-production.up.railway.app/api/orders",
+      "https://api.lanawardrobe.in/api/orders",
       {
         method: "POST",
 
@@ -198,7 +198,7 @@ const handleSubmit = async (e) => {
 
     const razorpayResponse =
       await fetch(
-        " https://lana-wardrobe-production.up.railway.app/api/payments/create-razorpay-order",
+        "https://api.lanawardrobe.in/api/payments/create-razorpay-order",
         {
           method: "POST",
 
@@ -277,7 +277,7 @@ const handleSubmit = async (e) => {
         try {
           const verifyResponse =
             await fetch(
-              " https://lana-wardrobe-production.up.railway.app/api/payments/verify-razorpay-payment",
+              "https://api.lanawardrobe.in/api/payments/verify-razorpay-payment",
               {
                 method: "POST",
 
@@ -510,7 +510,7 @@ const handleSubmit = async (e) => {
   className="place-order-button"
 >
   {paymentMethod === "online"
-    ? `PAY ₹${total}`
+    ? `PAY â‚¹${total}`
     : "PLACE COD ORDER"}
 </button>
         </form>
@@ -535,7 +535,7 @@ const handleSubmit = async (e) => {
                 </div>
 
                 <strong>
-                  ₹
+                  â‚¹
                   {(item.discountPrice || item.price) *
                     item.quantity}
                 </strong>
@@ -545,19 +545,19 @@ const handleSubmit = async (e) => {
 
           <div className="checkout-total-row">
             <span>Subtotal</span>
-            <span>₹{subtotal}</span>
+            <span>â‚¹{subtotal}</span>
           </div>
 
           <div className="checkout-total-row">
             <span>Shipping</span>
             <span>
-              {shipping === 0 ? "FREE" : `₹${shipping}`}
+              {shipping === 0 ? "FREE" : `â‚¹${shipping}`}
             </span>
           </div>
 
           <div className="checkout-total-row checkout-grand-total">
             <strong>Total</strong>
-            <strong>₹{total}</strong>
+            <strong>â‚¹{total}</strong>
           </div>
         </aside>
       </section>

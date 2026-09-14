@@ -1,4 +1,4 @@
-import {
+﻿import {
   useEffect,
   useState,
 } from "react";
@@ -69,7 +69,7 @@ function AdminShipping() {
         shipmentsResponse,
       ] = await Promise.all([
         fetch(
-          " https://lana-wardrobe-production.up.railway.app/api/admin/shipping/ready-orders",
+          "https://api.lanawardrobe.in/api/admin/shipping/ready-orders",
           {
             headers: {
               Authorization:
@@ -79,7 +79,7 @@ function AdminShipping() {
         ),
 
         fetch(
-          " https://lana-wardrobe-production.up.railway.app/api/admin/shipments",
+          "https://api.lanawardrobe.in/api/admin/shipments",
           {
             headers: {
               Authorization:
@@ -312,7 +312,7 @@ function AdminShipping() {
 
         const response =
           await fetch(
-            " https://lana-wardrobe-production.up.railway.app/api/admin/shipments",
+            "https://api.lanawardrobe.in/api/admin/shipments",
             {
               method: "POST",
 
@@ -574,7 +574,7 @@ function AdminShipping() {
 
         const response =
           await fetch(
-            ` https://lana-wardrobe-production.up.railway.app/api/admin/shipments/${shipment.id}`,
+            `https://api.lanawardrobe.in/api/admin/shipments/${shipment.id}`,
             {
               method: "PUT",
 
@@ -834,7 +834,7 @@ function AdminShipping() {
                         </span>
 
                         <strong>
-                          ₹
+                          â‚¹
                           {
                             order.total_amount
                           }
@@ -945,7 +945,7 @@ function AdminShipping() {
                                     {
                                       item.quantity
                                     }{" "}
-                                    ×{" "}
+                                    Ã—{" "}
                                     {
                                       item.product_name
                                     }
@@ -1042,7 +1042,7 @@ function AdminShipping() {
 
                             <div>
                               <label>
-                                Shipping Cost (₹)
+                                Shipping Cost (â‚¹)
                               </label>
 
                               <input
@@ -1416,7 +1416,7 @@ function AdminShipping() {
                               {shipment.length &&
                               shipment.width &&
                               shipment.height
-                                ? `${shipment.length} × ${shipment.width} × ${shipment.height} cm`
+                                ? `${shipment.length} Ã— ${shipment.width} Ã— ${shipment.height} cm`
                                 : "-"}
                             </strong>
                           </div>
@@ -1429,7 +1429,7 @@ function AdminShipping() {
                             <strong>
                               {shipment.shipping_cost !==
                               null
-                                ? `₹${shipment.shipping_cost}`
+                                ? `â‚¹${shipment.shipping_cost}`
                                 : "-"}
                             </strong>
                           </div>
@@ -1671,7 +1671,7 @@ function AdminShipping() {
                               <div>
 
                                 <label>
-                                  Shipping Cost (₹)
+                                  Shipping Cost (â‚¹)
                                 </label>
 
                                 <input

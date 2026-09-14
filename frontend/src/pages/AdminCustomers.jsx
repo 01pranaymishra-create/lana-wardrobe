@@ -1,4 +1,4 @@
-import {
+﻿import {
   useEffect,
   useMemo,
   useState,
@@ -30,7 +30,7 @@ function AdminCustomers() {
 
           const response =
             await fetch(
-              " https://lana-wardrobe-production.up.railway.app/api/admin/customers",
+              "https://api.lanawardrobe.in/api/admin/customers",
               {
                 headers: {
                   Authorization:
@@ -151,7 +151,7 @@ const handleToggleStatus =
 
       const response =
         await fetch(
-          ` https://lana-wardrobe-production.up.railway.app/api/admin/customers/${customer.id}/status`,
+          `https://api.lanawardrobe.in/api/admin/customers/${customer.id}/status`,
           {
             method: "PUT",
 
@@ -342,7 +342,7 @@ const handleToggleStatus =
                       </td>
 
                       <td>
-                        ₹
+                        â‚¹
                         {Number(
                           customer.total_spent ||
                             0

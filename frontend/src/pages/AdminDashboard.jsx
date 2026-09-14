@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 function AdminDashboard() {
@@ -21,7 +21,7 @@ function AdminDashboard() {
         const token = localStorage.getItem("lana_token");
 
         const response = await fetch(
-          " https://lana-wardrobe-production.up.railway.app/api/admin/dashboard-summary",
+          "https://api.lanawardrobe.in/api/admin/dashboard-summary",
           {
             headers: {
               Authorization: `Bearer ${token}`,

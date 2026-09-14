@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 function BulkOrders() {
@@ -200,7 +200,7 @@ const handleSubmit = async (event) => {
     }
 
     const response = await fetch(
-      " https://lana-wardrobe-production.up.railway.app/api/bulk-order-requests",
+      "https://api.lanawardrobe.in/api/bulk-order-requests",
       {
         method: "POST",
         body: requestData,
@@ -664,7 +664,7 @@ const handleSubmit = async (event) => {
             type="submit"
             className="customize-submit"
           >
-            REQUEST BULK QUOTATION →
+            REQUEST BULK QUOTATION â†’
           </button>
 
         </form>

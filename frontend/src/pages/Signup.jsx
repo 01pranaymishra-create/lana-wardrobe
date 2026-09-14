@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Auth.css";
 
@@ -42,7 +42,7 @@ function Signup() {
       setSubmitting(true);
 
       const response = await fetch(
-        " https://lana-wardrobe-production.up.railway.app/api/auth/register",
+        "https://api.lanawardrobe.in/api/auth/register",
         {
           method: "POST",
           headers: {

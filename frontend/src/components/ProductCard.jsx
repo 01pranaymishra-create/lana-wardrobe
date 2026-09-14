@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 
 function ProductCard({ product }) {
   return (
@@ -13,7 +13,7 @@ function ProductCard({ product }) {
               src={
                 product.imageUrl.startsWith("http")
                   ? product.imageUrl
-                  : ` https://lana-wardrobe-production.up.railway.app${product.imageUrl}`
+                  : `https://api.lanawardrobe.in${product.imageUrl}`
               }
               alt={product.name}
               className="product-image"
@@ -30,16 +30,16 @@ function ProductCard({ product }) {
             {product.discountPrice ? (
               <>
                 <span className="discount-price">
-                  ₹{product.discountPrice}
+                  â‚¹{product.discountPrice}
                 </span>
 
                 <span className="original-price">
-                  ₹{product.price}
+                  â‚¹{product.price}
                 </span>
               </>
             ) : (
               <span className="discount-price">
-                ₹{product.price}
+                â‚¹{product.price}
               </span>
             )}
           </div>

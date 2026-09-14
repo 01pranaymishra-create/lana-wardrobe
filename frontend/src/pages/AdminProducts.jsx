@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
 function AdminProducts() {
@@ -13,7 +13,7 @@ function AdminProducts() {
           localStorage.getItem("lana_token");
 
         const response = await fetch(
-          " https://lana-wardrobe-production.up.railway.app/api/admin/products",
+          "https://api.lanawardrobe.in/api/admin/products",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -70,7 +70,7 @@ function AdminProducts() {
         localStorage.getItem("lana_token");
 
       const response = await fetch(
-        ` https://lana-wardrobe-production.up.railway.app/api/admin/products/${productId}`,
+        `https://api.lanawardrobe.in/api/admin/products/${productId}`,
         {
           method: "DELETE",
           headers: {
@@ -180,7 +180,7 @@ function AdminProducts() {
                         "http"
                       )
                         ? product.image_url
-                        : ` https://lana-wardrobe-production.up.railway.app${product.image_url}`
+                        : `https://api.lanawardrobe.in${product.image_url}`
                     }
                     alt={product.name}
                   />
@@ -204,12 +204,12 @@ function AdminProducts() {
                 </p>
 
                 <p>
-                  Price: ₹{product.price}
+                  Price: â‚¹{product.price}
                 </p>
 
                 {product.discount_price && (
                   <p>
-                    Discount Price: ₹
+                    Discount Price: â‚¹
                     {product.discount_price}
                   </p>
                 )}

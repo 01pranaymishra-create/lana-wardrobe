@@ -1,4 +1,4 @@
-import {
+﻿import {
   useEffect,
   useState,
 } from "react";
@@ -34,7 +34,7 @@ function AdminReviews() {
 
         const response =
           await fetch(
-            " https://lana-wardrobe-production.up.railway.app/api/admin/reviews",
+            "https://api.lanawardrobe.in/api/admin/reviews",
             {
               headers: {
                 Authorization:
@@ -107,7 +107,7 @@ function AdminReviews() {
 
         const response =
           await fetch(
-            ` https://lana-wardrobe-production.up.railway.app/api/admin/reviews/${review.id}/status`,
+            `https://api.lanawardrobe.in/api/admin/reviews/${review.id}/status`,
             {
               method: "PUT",
 
@@ -205,7 +205,7 @@ function AdminReviews() {
 
       const response =
         await fetch(
-          ` https://lana-wardrobe-production.up.railway.app/api/admin/reviews/${review.id}`,
+          `https://api.lanawardrobe.in/api/admin/reviews/${review.id}`,
           {
             method: "DELETE",
 
@@ -299,11 +299,11 @@ function AdminReviews() {
                   </p>
 
                   <div className="admin-review-stars">
-                    {"★".repeat(
+                    {"â˜…".repeat(
                       review.rating
                     )}
 
-                    {"☆".repeat(
+                    {"â˜†".repeat(
                       5 -
                         review.rating
                     )}
@@ -329,7 +329,7 @@ function AdminReviews() {
 
                     <span>
                       {review.is_verified_purchase
-                        ? "✓ Verified Purchase"
+                        ? "âœ“ Verified Purchase"
                         : "Not Verified"}
                     </span>
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import logo from "../assets/lana-logo.png";
 import { useCart } from "../context/CartContext";
@@ -61,7 +61,7 @@ function Navbar() {
             type="button"
             className="nav-dropdown-button"
           >
-            Shop <span>⌄</span>
+            Shop <span>âŒ„</span>
           </button>
 
           <div className="dropdown-menu">
@@ -92,7 +92,7 @@ function Navbar() {
             type="button"
             className="nav-dropdown-button"
           >
-            Products <span>⌄</span>
+            Products <span>âŒ„</span>
           </button>
 
           <div className="dropdown-menu">
@@ -123,7 +123,7 @@ function Navbar() {
             type="button"
             className="nav-dropdown-button"
           >
-            Customize & Bulk <span>⌄</span>
+            Customize & Bulk <span>âŒ„</span>
           </button>
 
           <div className="dropdown-menu">
@@ -166,7 +166,7 @@ function Navbar() {
             type="submit"
             aria-label="Search"
           >
-            🔍
+            ðŸ”
           </button>
         </form>
 
@@ -180,7 +180,7 @@ function Navbar() {
             aria-label="Wishlist"
           >
             <span className="wishlist-icon">
-              ♡
+              â™¡
             </span>
 
             {wishlistCount > 0 && (
@@ -197,7 +197,7 @@ function Navbar() {
             aria-label="Cart"
           >
             <span className="cart-icon">
-              🛒
+              ðŸ›’
             </span>
 
             {cartCount > 0 && (
@@ -217,7 +217,7 @@ function Navbar() {
         className="account-button"
         aria-label="Account"
       >
-        👤
+        ðŸ‘¤
       </button>
 
       <div className="account-dropdown">
@@ -263,7 +263,7 @@ function Navbar() {
         className="account-button"
         aria-label="Account"
       >
-        👤
+        ðŸ‘¤
       </button>
 
       <div className="account-dropdown">

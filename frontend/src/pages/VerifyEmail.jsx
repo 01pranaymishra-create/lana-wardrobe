@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import {
   Link,
   useNavigate,
@@ -42,7 +42,7 @@ function VerifyEmail() {
       setSubmitting(true);
 
       const response = await fetch(
-        " https://lana-wardrobe-production.up.railway.app/api/auth/verify-email-otp",
+        "https://api.lanawardrobe.in/api/auth/verify-email-otp",
         {
           method: "POST",
 
@@ -100,7 +100,7 @@ function VerifyEmail() {
       setResending(true);
 
       const response = await fetch(
-        " https://lana-wardrobe-production.up.railway.app/api/auth/resend-email-otp",
+        "https://api.lanawardrobe.in/api/auth/resend-email-otp",
         {
           method: "POST",
 

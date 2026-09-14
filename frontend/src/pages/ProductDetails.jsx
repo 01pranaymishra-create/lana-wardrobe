@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   useNavigate,
   useParams,
@@ -136,7 +136,7 @@ function ProductDetails() {
         try {
           const response =
             await fetch(
-              ` https://lana-wardrobe-production.up.railway.app/api/products/${id}/images`
+              `https://api.lanawardrobe.in/api/products/${id}/images`
             );
 
           const data =
@@ -194,7 +194,7 @@ function ProductDetails() {
 
         const response =
           await fetch(
-            ` https://lana-wardrobe-production.up.railway.app/api/products/${id}/reviews`
+            `https://api.lanawardrobe.in/api/products/${id}/reviews`
           );
 
         const data =
@@ -282,7 +282,7 @@ function ProductDetails() {
 
         const response =
           await fetch(
-            ` https://lana-wardrobe-production.up.railway.app/api/products/${id}/reviews`,
+            `https://api.lanawardrobe.in/api/products/${id}/reviews`,
             {
               method: "POST",
 
@@ -362,7 +362,7 @@ function ProductDetails() {
               : "review-star"
           }
         >
-          ★
+          â˜…
         </span>
       )
     );
@@ -436,7 +436,7 @@ function ProductDetails() {
                     "http"
                   )
                     ? selectedImage
-                    : ` https://lana-wardrobe-production.up.railway.app${selectedImage}`
+                    : `https://api.lanawardrobe.in${selectedImage}`
                 }
                 alt={
                   product.name
@@ -483,7 +483,7 @@ function ProductDetails() {
                           "http"
                         )
                           ? image.image_url
-                          : ` https://lana-wardrobe-production.up.railway.app${image.image_url}`
+                          : `https://api.lanawardrobe.in${image.image_url}`
                       }
 
                       alt={
@@ -546,14 +546,14 @@ function ProductDetails() {
           <div className="details-price">
 
             <span className="details-sale-price">
-              ₹
+              â‚¹
               {product.discountPrice ||
                 product.price}
             </span>
 
             {product.discountPrice && (
               <span className="details-original-price">
-                ₹{product.price}
+                â‚¹{product.price}
               </span>
             )}
 
@@ -664,7 +664,7 @@ function ProductDetails() {
                   )
                 }
               >
-                −
+                âˆ’
               </button>
 
               <span>
@@ -787,8 +787,8 @@ function ProductDetails() {
               }}
             >
               {productIsInWishlist
-                ? "♥ REMOVE FROM WISHLIST"
-                : "♡ ADD TO WISHLIST"}
+                ? "â™¥ REMOVE FROM WISHLIST"
+                : "â™¡ ADD TO WISHLIST"}
             </button>
 
           </div>
@@ -863,7 +863,7 @@ function ProductDetails() {
                     className="review-breakdown-row"
                   >
                     <span>
-                      {star} ★
+                      {star} â˜…
                     </span>
 
                     <div className="review-progress-bar">
@@ -987,7 +987,7 @@ function ProductDetails() {
                           )
                         }
                       >
-                        ★
+                        â˜…
                       </button>
                     )
                   )}
@@ -1124,7 +1124,7 @@ function ProductDetails() {
 
                       {review.is_verified_purchase && (
                         <span className="verified-purchase">
-                          ✓ Verified
+                          âœ“ Verified
                           Purchase
                         </span>
                       )}

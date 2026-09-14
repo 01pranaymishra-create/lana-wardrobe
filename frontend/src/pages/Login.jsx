@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useLocation, useNavigate,} from "react-router-dom";
 import "./Auth.css";
 import { useAuth } from "../context/AuthContext";
@@ -38,7 +38,7 @@ const redirectPath =
       setSubmitting(true);
 
       const response = await fetch(
-        " https://lana-wardrobe-production.up.railway.app/api/auth/login",
+        "https://api.lanawardrobe.in/api/auth/login",
         {
           method: "POST",
           headers: {

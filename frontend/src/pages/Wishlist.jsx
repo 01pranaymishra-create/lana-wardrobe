@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+﻿import { Link } from "react-router-dom";
 import ProductCard from "../components/ProductCard";
 import { useWishlist } from "../context/WishlistContext";
 
@@ -27,7 +27,7 @@ function Wishlist() {
           </p>
 
           <Link to="/shop" className="shop-button">
-            EXPLORE PRODUCTS →
+            EXPLORE PRODUCTS â†’
           </Link>
         </section>
       ) : (

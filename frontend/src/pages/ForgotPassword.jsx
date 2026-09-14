@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Auth.css";
 
@@ -20,7 +20,7 @@ function ForgotPassword() {
       setSubmitting(true);
 
       const response = await fetch(
-        " https://lana-wardrobe-production.up.railway.app/api/auth/forgot-password",
+        "https://api.lanawardrobe.in/api/auth/forgot-password",
         {
           method: "POST",
           headers: {
