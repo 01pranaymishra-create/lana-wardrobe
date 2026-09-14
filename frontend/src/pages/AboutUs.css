@@ -1,0 +1,203 @@
+.about-page {
+  min-height: 100vh;
+  background: #f8f5f0;
+}
+
+.about-hero {
+  padding: 80px 20px 70px;
+  text-align: center;
+  background: #ffffff;
+}
+
+.about-small-title {
+  margin-bottom: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  color: #555555;
+}
+
+.about-hero h1 {
+  margin: 0 0 22px;
+  font-size: 52px;
+  font-weight: 600;
+  color: #111111;
+}
+
+.about-intro {
+  max-width: 720px;
+  margin: 0 auto;
+
+  font-size: 16px;
+  line-height: 1.8;
+
+  color: #555555;
+}
+
+.about-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 80px 6%;
+}
+
+.about-section {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 70px;
+
+  align-items: center;
+
+  margin-bottom: 90px;
+}
+
+.about-section-reverse {
+  grid-template-columns: 1.2fr 0.8fr;
+}
+
+.about-label {
+  margin-bottom: 14px;
+
+  font-size: 11px;
+  font-weight: 600;
+
+  letter-spacing: 3px;
+
+  color: #666666;
+}
+
+.about-text h2 {
+  margin-bottom: 25px;
+
+  font-size: 38px;
+  font-weight: 600;
+
+  color: #111111;
+}
+
+.about-text p:not(.about-label) {
+  margin-bottom: 18px;
+
+  font-size: 15px;
+  line-height: 1.8;
+
+  color: #555555;
+}
+
+.about-highlight {
+  min-height: 320px;
+  padding: 45px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  background: #111111;
+  color: #ffffff;
+}
+
+.about-highlight span {
+  margin-bottom: 8px;
+
+  font-size: 15px;
+  letter-spacing: 5px;
+
+  color: #bbbbbb;
+}
+
+.about-highlight strong {
+  margin-bottom: 20px;
+
+  font-size: 34px;
+  letter-spacing: 2px;
+}
+
+.about-highlight p {
+  max-width: 260px;
+
+  font-size: 14px;
+  line-height: 1.7;
+
+  color: #cccccc;
+}
+
+.about-highlight.light {
+  background: #e9e2da;
+  color: #111111;
+}
+
+.about-highlight.light span {
+  color: #666666;
+}
+
+.about-highlight.light p {
+  color: #555555;
+}
+
+.about-values {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 25px;
+
+  margin-bottom: 90px;
+}
+
+.about-value-card {
+  padding: 35px;
+
+  background: #ffffff;
+  border: 1px solid #e4ded7;
+}
+
+.about-value-card h3 {
+  margin-bottom: 15px;
+
+  font-size: 20px;
+
+  color: #111111;
+}
+
+.about-value-card p {
+  font-size: 14px;
+  line-height: 1.7;
+
+  color: #666666;
+}
+
+@media (max-width: 850px) {
+  .about-section,
+  .about-section-reverse {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .about-values {
+    grid-template-columns: 1fr;
+  }
+
+  .about-hero h1 {
+    font-size: 42px;
+  }
+}
+
+@media (max-width: 550px) {
+  .about-hero {
+    padding: 60px 20px 50px;
+  }
+
+  .about-hero h1 {
+    font-size: 34px;
+  }
+
+  .about-container {
+    padding: 55px 20px;
+  }
+
+  .about-text h2 {
+    font-size: 30px;
+  }
+
+  .about-highlight {
+    min-height: 260px;
+    padding: 30px;
+  }
+}
