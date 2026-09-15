@@ -41,6 +41,35 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Temporary site pause control
+app.use((req, res, next) => {
+  const sitePaused =
+    process.env.SITE_PAUSED === "true";
+
+  if (!sitePaused) {
+    return next();
+  }
+
+  const blockedRoutes = [
+    "POST /api/auth/register",
+    "POST /api/orders",
+    "POST /api/payments/create-razorpay-order"
+  ];
+
+  const currentRoute =
+    `${req.method} ${req.path}`;
+
+  if (blockedRoutes.includes(currentRoute)) {
+    return res.status(503).json({
+      success: false,
+      message:
+        "Lana Wardrobe is temporarily under maintenance. Please try again soon.",
+    });
+  }
+
+  next();
+});
+
 // =========================
 // DESIGN FILE UPLOAD SETUP && PRODUCT IMAGE UPLOAD SETUP  
 // =========================
