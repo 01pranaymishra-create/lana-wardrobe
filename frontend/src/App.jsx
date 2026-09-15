@@ -34,11 +34,13 @@ import AdminOrders from "./pages/AdminOrders";
 import AdminShipping from "./pages/AdminShipping";
 import AdminReviews from "./pages/AdminReviews";
 import AdminCustomers from "./pages/AdminCustomers";
+import ScrollToTop from "./components/ScrollToTop";
 import "./App.css";
 
 function App() {
   return (
     <BrowserRouter>
+      <ScrollToTop />
       <Navbar />
 
       <Routes>
