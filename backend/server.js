@@ -6,9 +6,18 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { Resend } = require("resend");
-require("dotenv").config();
+
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
+const { v2: cloudinary } = require("cloudinary");
+require("dotenv").config();
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
 
 const pool = require("./db");
 const {
@@ -80,34 +89,7 @@ const designUploadDirectory = path.join(
   "designs"
 );
 
-const productImageDirectory = path.join(
-  __dirname,
-  "Uploads",
-  "products"
-);
-
-if (!fs.existsSync(productImageDirectory)) {
-  fs.mkdirSync(productImageDirectory, {
-    recursive: true,
-  });
-}
-
-const productImageStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, productImageDirectory);
-  },
-
-  filename: (req, file, cb) => {
-    const uniqueName =
-      Date.now() +
-      "-" +
-      Math.round(Math.random() * 1e9) +
-      path.extname(file.originalname);
-
-    cb(null, uniqueName);
-  },
-});
-
+const productImageStorage = multer.memoryStorage();
 const productImageFilter = (req, file, cb) => {
   const allowedTypes = [
     "image/png",
@@ -125,6 +107,30 @@ const productImageFilter = (req, file, cb) => {
       false
     );
   }
+};
+
+const uploadProductImageToCloudinary = (
+  fileBuffer
+) => {
+  return new Promise((resolve, reject) => {
+    const uploadStream =
+      cloudinary.uploader.upload_stream(
+        {
+          folder: "lana-wardrobe/products",
+          resource_type: "image",
+        },
+        (error, result) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+
+          resolve(result);
+        }
+      );
+
+    uploadStream.end(fileBuffer);
+  });
 };
 
 const uploadProductImage = multer({
@@ -2581,6 +2587,8 @@ app.post(
   async (req, res) => {
     const client = await pool.connect();
 
+    const uploadedCloudinaryImages = [];
+
     try {
       const productId = Number(req.params.id);
 
@@ -2594,7 +2602,8 @@ app.post(
       if (!req.files || req.files.length === 0) {
         return res.status(400).json({
           success: false,
-          message: "Please select at least one image.",
+          message:
+            "Please select at least one image.",
         });
       }
 
@@ -2614,30 +2623,54 @@ app.post(
         });
       }
 
+      /*
+        Upload images to Cloudinary first.
+      */
+      for (const file of req.files) {
+        const cloudinaryResult =
+          await uploadProductImageToCloudinary(
+            file.buffer
+          );
+
+        uploadedCloudinaryImages.push({
+          secure_url:
+            cloudinaryResult.secure_url,
+          public_id:
+            cloudinaryResult.public_id,
+        });
+      }
+
       await client.query("BEGIN");
 
-      const existingImagesResult = await client.query(
-        `
-        SELECT COUNT(*)::int AS count
-        FROM product_images
-        WHERE product_id = $1
-        `,
-        [productId]
-      );
+      const existingImagesResult =
+        await client.query(
+          `
+          SELECT COUNT(*)::int AS count
+          FROM product_images
+          WHERE product_id = $1
+          `,
+          [productId]
+        );
 
       let nextOrder =
         existingImagesResult.rows[0].count;
 
       const insertedImages = [];
 
-      for (let i = 0; i < req.files.length; i++) {
-        const file = req.files[i];
+      for (
+        let i = 0;
+        i < uploadedCloudinaryImages.length;
+        i++
+      ) {
+        const cloudinaryImage =
+          uploadedCloudinaryImages[i];
 
         const imageUrl =
-          `/uploads/products/${file.filename}`;
+          cloudinaryImage.secure_url;
 
         const isPrimary =
-          existingImagesResult.rows[0].count === 0 &&
+          existingImagesResult.rows[0].count ===
+            0 &&
           i === 0;
 
         const imageResult = await client.query(
@@ -2666,6 +2699,10 @@ app.post(
         nextOrder++;
       }
 
+      /*
+        If product doesn't already have a main image,
+        use the first Cloudinary image.
+      */
       if (
         !productResult.rows[0].image_url &&
         insertedImages.length > 0
@@ -2693,9 +2730,32 @@ app.post(
           "Product images uploaded successfully.",
         images: insertedImages,
       });
-
     } catch (error) {
-      await client.query("ROLLBACK");
+      try {
+        await client.query("ROLLBACK");
+      } catch {
+        // No active transaction is also possible
+      }
+
+      /*
+        If Cloudinary upload succeeded but database
+        saving failed, remove those uploaded files
+        so we don't leave unused images behind.
+      */
+      for (
+        const image of uploadedCloudinaryImages
+      ) {
+        try {
+          await cloudinary.uploader.destroy(
+            image.public_id
+          );
+        } catch (cleanupError) {
+          console.error(
+            "Cloudinary cleanup error:",
+            cleanupError
+          );
+        }
+      }
 
       console.error(
         "Product images upload error:",
@@ -2707,13 +2767,11 @@ app.post(
         message:
           "Failed to upload product images.",
       });
-
     } finally {
       client.release();
     }
   }
 );
-
 // =========================
 // PRODUCT IMAGE GALLERY
 // =========================
