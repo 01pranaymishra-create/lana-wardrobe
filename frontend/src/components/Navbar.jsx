@@ -7,11 +7,17 @@ import { useAuth } from "../context/AuthContext";
 
 function Navbar() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const [shopOpen, setShopOpen] = useState(false);
+  const [productsOpen, setProductsOpen] = useState(false);
+  const [customizeOpen, setCustomizeOpen] = useState(false);
+
   const {
-  user,
-  isLoggedIn,
-  logout,
-} = useAuth();
+    user,
+    isLoggedIn,
+    logout,
+  } = useAuth();
 
   const navigate = useNavigate();
 
@@ -35,13 +41,26 @@ function Navbar() {
     navigate(
       `/shop?search=${encodeURIComponent(trimmedSearch)}`
     );
+
+    closeMobileMenu();
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+    setShopOpen(false);
+    setProductsOpen(false);
+    setCustomizeOpen(false);
   };
 
   return (
     <header className="navbar">
 
       {/* LOGO */}
-      <Link to="/" className="logo">
+      <Link
+        to="/"
+        className="logo"
+        onClick={closeMobileMenu}
+      >
         <img
           src={logo}
           alt="Lana Wardrobe"
@@ -50,99 +69,176 @@ function Navbar() {
       </Link>
 
       {/* MAIN NAVIGATION */}
-      <nav className="main-nav">
+      <nav
+        className={`main-nav ${
+          mobileMenuOpen ? "mobile-open" : ""
+        }`}
+      >
+        {/* MOBILE CLOSE BUTTON */}
+        <button
+          type="button"
+          className="mobile-menu-close"
+          onClick={closeMobileMenu}
+          aria-label="Close menu"
+        >
+          ✕
+        </button>
 
-        <Link to="/">Home</Link>
+        <Link
+          to="/"
+          onClick={closeMobileMenu}
+        >
+          Home
+        </Link>
 
         {/* SHOP DROPDOWN */}
         <div className="nav-dropdown">
-
           <button
             type="button"
             className="nav-dropdown-button"
+            onClick={() =>
+              setShopOpen((prev) => !prev)
+            }
           >
-            Shop <span>⌄</span>
+            Shop
+            <span>
+              {shopOpen ? "▲" : "▼"}
+            </span>
           </button>
 
-          <div className="dropdown-menu">
-
-            <Link to="/shop">
+          <div
+            className={`dropdown-menu ${
+              shopOpen
+                ? "mobile-dropdown-open"
+                : ""
+            }`}
+          >
+            <Link
+              to="/shop"
+              onClick={closeMobileMenu}
+            >
               Shop All
             </Link>
 
-            <Link to="/latest">
+            <Link
+              to="/latest"
+              onClick={closeMobileMenu}
+            >
               New Arrivals
             </Link>
 
-            <Link to="/best-sellers">
+            <Link
+              to="/best-sellers"
+              onClick={closeMobileMenu}
+            >
               Best Sellers
             </Link>
 
-            <Link to="/offers">
+            <Link
+              to="/offers"
+              onClick={closeMobileMenu}
+            >
               Offers
             </Link>
-
           </div>
         </div>
 
         {/* PRODUCTS DROPDOWN */}
         <div className="nav-dropdown">
-
           <button
             type="button"
             className="nav-dropdown-button"
+            onClick={() =>
+              setProductsOpen((prev) => !prev)
+            }
           >
-            Products <span>⌄</span>
+            Products
+            <span>
+              {productsOpen ? "▲" : "▼"}
+            </span>
           </button>
 
-          <div className="dropdown-menu">
-
-            <Link to="/category/men">
+          <div
+            className={`dropdown-menu ${
+              productsOpen
+                ? "mobile-dropdown-open"
+                : ""
+            }`}
+          >
+            <Link
+              to="/category/men"
+              onClick={closeMobileMenu}
+            >
               Men
             </Link>
 
-            <Link to="/category/women">
+            <Link
+              to="/category/women"
+              onClick={closeMobileMenu}
+            >
               Women
             </Link>
 
-            <Link to="/category/unisex">
+            <Link
+              to="/category/unisex"
+              onClick={closeMobileMenu}
+            >
               Unisex
             </Link>
 
-            <Link to="/category/sports">
+            <Link
+              to="/category/sports"
+              onClick={closeMobileMenu}
+            >
               Sports T-Shirts
             </Link>
-
           </div>
         </div>
 
         {/* CUSTOMIZE & BULK DROPDOWN */}
         <div className="nav-dropdown">
-
           <button
             type="button"
             className="nav-dropdown-button"
+            onClick={() =>
+              setCustomizeOpen((prev) => !prev)
+            }
           >
-            Customize & Bulk <span>⌄</span>
+            Customize & Bulk
+            <span>
+              {customizeOpen ? "▲" : "▼"}
+            </span>
           </button>
 
-          <div className="dropdown-menu">
-
-            <Link to="/customize">
+          <div
+            className={`dropdown-menu ${
+              customizeOpen
+                ? "mobile-dropdown-open"
+                : ""
+            }`}
+          >
+            <Link
+              to="/customize"
+              onClick={closeMobileMenu}
+            >
               Customize T-Shirt
             </Link>
 
-            <Link to="/bulk-orders">
+            <Link
+              to="/bulk-orders"
+              onClick={closeMobileMenu}
+            >
               Bulk Orders
             </Link>
-
           </div>
         </div>
 
-        <Link to="/contact-us">
-        Contact Us
+        <Link
+          to="/contact-us"
+          onClick={closeMobileMenu}
+        >
+          Contact Us
         </Link>
-
       </nav>
 
       {/* RIGHT SIDE */}
@@ -178,6 +274,7 @@ function Navbar() {
             to="/wishlist"
             className="wishlist-link"
             aria-label="Wishlist"
+            onClick={closeMobileMenu}
           >
             <span className="wishlist-icon">
               ♡
@@ -195,6 +292,7 @@ function Navbar() {
             to="/cart"
             className="cart-link"
             aria-label="Cart"
+            onClick={closeMobileMenu}
           >
             <span className="cart-icon">
               🛒
@@ -208,82 +306,109 @@ function Navbar() {
           </Link>
 
           {/* ACCOUNT */}
-<div className="account-menu">
+          <div className="account-menu">
 
-  {isLoggedIn ? (
-    <>
-      <button
-        type="button"
-        className="account-button"
-        aria-label="Account"
-      >
-        👤
-      </button>
+            {isLoggedIn ? (
+              <>
+                <button
+                  type="button"
+                  className="account-button"
+                  aria-label="Account"
+                >
+                  👤
+                </button>
 
-      <div className="account-dropdown">
+                <div className="account-dropdown">
 
-        <div className="account-user">
-          <strong>
-            {user?.full_name}
-          </strong>
+                  <div className="account-user">
+                    <strong>
+                      {user?.full_name}
+                    </strong>
 
-          <span>
-            {user?.email}
-          </span>
+                    <span>
+                      {user?.email}
+                    </span>
+                  </div>
+
+                  <Link
+                    to="/account"
+                    onClick={closeMobileMenu}
+                  >
+                    My Account
+                  </Link>
+
+                  <Link
+                    to="/orders"
+                    onClick={closeMobileMenu}
+                  >
+                    Your Orders
+                  </Link>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      closeMobileMenu();
+
+                      logout();
+
+                      navigate("/login", {
+                        replace: true,
+                      });
+                    }}
+                  >
+                    Logout
+                  </button>
+
+                </div>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  className="account-button"
+                  aria-label="Account"
+                >
+                  👤
+                </button>
+
+                <div className="account-dropdown">
+
+                  <Link
+                    to="/login"
+                    onClick={closeMobileMenu}
+                  >
+                    Login
+                  </Link>
+
+                  <Link
+                    to="/signup"
+                    onClick={closeMobileMenu}
+                  >
+                    Create Account
+                  </Link>
+
+                </div>
+              </>
+            )}
+
+          </div>
+
         </div>
 
-        <Link to="/account">
-          My Account
-        </Link>
-
-        <Link to="/orders">
-          Your Orders
-        </Link>
-
-        <button
-  type="button"
-  onClick={() => {
-    logout();
-
-    navigate("/login", {
-      replace: true,
-    });
-  }}
->
-  Logout
-</button>
-
-      </div>
-    </>
-  ) : (
-    <div className="account-menu">
-
-      <button
-        type="button"
-        className="account-button"
-        aria-label="Account"
-      >
-        👤
-      </button>
-
-      <div className="account-dropdown">
-
-        <Link to="/login">
-          Login
-        </Link>
-
-        <Link to="/signup">
-          Create Account
-        </Link>
-
-      </div>
-
-    </div>
-  )}
-
-</div>
-
-        </div>
+        {/* MOBILE HAMBURGER */}
+        {!mobileMenuOpen && (
+          <button
+            type="button"
+            className="mobile-menu-button"
+            onClick={() =>
+              setMobileMenuOpen(true)
+            }
+            aria-label="Open menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            ☰
+          </button>
+        )}
 
       </div>
 

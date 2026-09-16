@@ -5645,3 +5645,313 @@ button {
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* =========================================
+   MOBILE NAVBAR ONLY
+   Does not affect desktop
+========================================= */
+
+.mobile-menu-button,
+.mobile-menu-close {
+  display: none;
+}
+
+@media (max-width: 800px) {
+
+  .navbar {
+    height: 68px;
+    min-height: 68px;
+
+    padding: 0 10px;
+
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+
+    gap: 8px;
+
+    position: relative;
+  }
+
+  /* LOGO */
+
+  .navbar .logo {
+    flex-shrink: 0;
+  }
+
+  .navbar-logo {
+    height: 38px;
+    width: auto;
+    margin: 0;
+  }
+
+  /* SEARCH + ACTIONS + HAMBURGER */
+
+  .nav-right {
+    flex: 1;
+    width: auto;
+
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+
+    gap: 5px;
+
+    margin: 0;
+  }
+
+  .navbar-search {
+    flex: 0 1 160px;
+
+    width: 160px;
+    max-width: 160px;
+    min-width: 100px;
+
+    height: 34px;
+
+    margin-left: auto;
+  }
+
+  .navbar-search input {
+    min-width: 0;
+    padding: 0 6px;
+
+    font-size: 11px;
+  }
+
+  .navbar-search button {
+    width: 30px;
+    flex-shrink: 0;
+  }
+
+  .nav-actions {
+    display: flex;
+    align-items: center;
+
+    flex-shrink: 0;
+
+    gap: 2px;
+
+    margin: 0;
+  }
+
+  .wishlist-link,
+  .cart-link,
+  .account-button {
+    padding: 3px;
+  }
+
+  .wishlist-icon {
+    font-size: 18px;
+  }
+
+  .cart-icon {
+    font-size: 16px;
+  }
+
+  /* HAMBURGER */
+
+  .mobile-menu-button {
+    display: block;
+
+    flex-shrink: 0;
+
+    margin: 0 0 0 2px;
+    padding: 3px;
+
+    border: none;
+    background: transparent;
+
+    color: #111;
+
+    font-size: 22px;
+    line-height: 1;
+
+    cursor: pointer;
+  }
+
+  /* MOBILE MENU */
+
+  .main-nav {
+    display: none;
+
+    position: absolute;
+
+    top: 68px;
+    left: 0;
+
+    width: 100%;
+
+    margin: 0;
+    padding: 8px 0 16px;
+
+    flex-direction: column;
+    align-items: stretch;
+
+    background: #ffffff;
+
+    border-top: 1px solid #e8e3dc;
+
+    z-index: 500;
+  }
+
+  .main-nav.mobile-open {
+    display: flex;
+  }
+
+  /* X BUTTON INSIDE MENU */
+
+  .mobile-menu-close {
+    display: block;
+
+    width: 38px;
+    height: 38px;
+
+    margin: 4px 0 8px 10px;
+
+    padding: 0;
+
+    border: none;
+    background: transparent;
+
+    color: #111;
+
+    font-size: 24px;
+    line-height: 38px;
+
+    cursor: pointer;
+
+    text-align: center;
+  }
+
+  /* MAIN MENU ROWS */
+
+  .main-nav > a {
+    display: flex;
+    align-items: center;
+
+    width: 100%;
+    min-height: 46px;
+
+    padding: 0 16px;
+
+    box-sizing: border-box;
+
+    font-size: 15px;
+
+    color: #111;
+    text-decoration: none;
+  }
+
+  .nav-dropdown {
+    width: 100%;
+  }
+
+  .nav-dropdown-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    width: 100%;
+    min-height: 46px;
+
+    margin: 0;
+    padding: 0 16px;
+
+    box-sizing: border-box;
+
+    border: none;
+    background: transparent;
+
+    font-family: inherit;
+    font-size: 15px;
+
+    color: #111;
+
+    cursor: pointer;
+  }
+
+  .nav-dropdown-button span {
+    margin-left: auto;
+    font-size: 10px;
+  }
+
+  /* DROPDOWN ITEMS */
+
+  .dropdown-menu {
+    position: static;
+
+    display: none;
+
+    width: 100%;
+    min-width: 0;
+
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+
+    border: none;
+    box-shadow: none;
+
+    background: #f8f5f0;
+  }
+
+  .dropdown-menu.mobile-dropdown-open {
+    display: block;
+  }
+
+  .nav-dropdown:hover .dropdown-menu {
+    display: none;
+  }
+
+  .nav-dropdown:hover
+    .dropdown-menu.mobile-dropdown-open {
+    display: block;
+  }
+
+  .dropdown-menu a {
+    display: flex;
+    align-items: center;
+
+    min-height: 42px;
+
+    padding: 0 30px;
+
+    box-sizing: border-box;
+
+    font-size: 14px;
+  }
+}
+
+
+/* EXTRA SMALL PHONES */
+
+@media (max-width: 390px) {
+
+  .navbar {
+    padding: 0 7px;
+    gap: 4px;
+  }
+
+  .navbar-logo {
+    height: 34px;
+  }
+
+  .navbar-search {
+    width: 135px;
+    max-width: 135px;
+    min-width: 90px;
+  }
+
+  .navbar-search input {
+    font-size: 10px;
+  }
+
+  .nav-actions {
+    gap: 1px;
+  }
+
+  .mobile-menu-button {
+    font-size: 21px;
+  }
+}
