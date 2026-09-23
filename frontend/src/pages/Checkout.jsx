@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 
 function loadRazorpayScript() {
@@ -36,6 +37,17 @@ function Checkout() {
   cartItems,
   clearCart,
 } = useCart();
+
+const location = useLocation();
+
+const buyNowItem =
+  location.state?.buyNowItem || null;
+
+const checkoutItems =
+  buyNowItem
+    ? [buyNowItem]
+    : cartItems;
+
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
@@ -50,7 +62,7 @@ function Checkout() {
   const [paymentMethod, setPaymentMethod] =
   useState("online");
 
-  const subtotal = cartItems.reduce(
+ const subtotal = checkoutItems.reduce(
     (total, item) =>
       total +
       (item.discountPrice || item.price) * item.quantity,
@@ -72,7 +84,7 @@ const total = subtotal;
 const handleSubmit = async (e) => {
   e.preventDefault();
 
-  if (cartItems.length === 0) {
+  if (checkoutItems.length === 0) {
     alert("Your cart is empty.");
     return;
   }
@@ -130,7 +142,7 @@ const handleSubmit = async (e) => {
 
           paymentMethod,
 
-          items: cartItems.map(
+          items: checkoutItems.map(
             (item) => ({
               productId:
                 item.id,
@@ -169,8 +181,9 @@ const handleSubmit = async (e) => {
     // =========================
 
     if (paymentMethod === "cod") {
+    if (!buyNowItem) {
       clearCart();
-
+    }
       alert(
         `Order #${lanaOrder.id} placed successfully with Cash on Delivery.`
       );
@@ -320,7 +333,9 @@ const handleSubmit = async (e) => {
             return;
           }
 
-          clearCart();
+          if (!buyNowItem) {
+            clearCart();
+          }
 
           alert(
             `Payment successful! Order #${lanaOrder.id} confirmed.`
@@ -518,7 +533,7 @@ const handleSubmit = async (e) => {
           <h2>Your Order</h2>
 
           <div className="checkout-items">
-            {cartItems.map((item) => (
+              {checkoutItems.map((item) => (
               <div
                 className="checkout-item"
                 key={item.cartId}

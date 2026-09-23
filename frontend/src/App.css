@@ -1292,6 +1292,38 @@ button {
   color: #555;
 }
 
+.buy-now-button {
+  flex: 1;
+  padding: 15px 20px;
+  border: 1px solid #111111;
+  background:  #ffffff;;
+  color: #111111;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.buy-now-button:hover {
+  background: #111111;
+  color: #ffffff;
+}
+
+@media (max-width: 150px) {
+  .product-actions {
+    flex-wrap: wrap;
+  }
+
+  .add-cart-button,
+  .buy-now-button {
+    flex: 1 1 calc(50% - 8px);
+  }
+
+  .wishlist-button {
+    flex: 1 1 100%;
+  }
+  
+}
+
 @media (max-width: 800px) {
   .product-details-container {
     grid-template-columns: 1fr;

@@ -368,6 +368,52 @@ function ProductDetails() {
     );
   };
 
+const handleBuyNow = () => {
+  if (!isLoggedIn) {
+    navigate("/login", {
+      state: {
+        from: `/product/${product.id}`,
+      },
+    });
+
+    return;
+  }
+
+  if (!selectedSize) {
+    alert("Please select a size.");
+    return;
+  }
+
+  if (!selectedColor) {
+    alert("Please select a color.");
+    return;
+  }
+
+  if (quantity > Number(product.stock)) {
+    alert(
+      `Only ${product.stock} item(s) available.`
+    );
+    return;
+  }
+
+  navigate("/checkout", {
+    state: {
+      buyNowItem: {
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        discountPrice:
+          product.discountPrice,
+        selectedSize,
+        selectedColor,
+        quantity,
+        cartId:
+          `buy-now-${product.id}-${selectedSize}-${selectedColor}`,
+      },
+    },
+  });
+};
+
   // ========================================
   // LOADING
   // ========================================
@@ -750,7 +796,13 @@ function ProductDetails() {
             >
               ADD TO CART
             </button>
-
+              <button
+              type="button"
+              className="buy-now-button"
+              onClick={handleBuyNow}
+            >
+              BUY NOW
+            </button>
             <button
               type="button"
               className="wishlist-button"
