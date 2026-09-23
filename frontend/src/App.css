@@ -427,15 +427,62 @@ button {
 .category-card:hover {
   transform: translateY(-4px);
 }
-
 .category-placeholder {
   height: 300px;
   background: #e7dfd6;
+  overflow: hidden;
+}
+
+.category-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+
+  transition: transform 0.4s ease;
+}
+
+.category-card:hover .category-image {
+  transform: scale(1.04);
+}
+
+.sports-category {
+  position: relative;
+}
+
+.sports-coming-soon {
+  position: absolute;
+  inset: 0;
+
   display: flex;
   align-items: center;
   justify-content: center;
-  letter-spacing: 4px;
-  font-size: 14px;
+
+  background: rgba(255, 255, 255, 0.42);
+
+  color: #111111;
+
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 3px;
+
+  text-align: center;
+}
+
+.sports-card {
+  cursor: default;
+}
+
+.sports-card:hover {
+  transform: none;
+}
+
+.sports-card:hover .category-image {
+  transform: none;
+}
+
+.coming-soon-text {
+  color: #777777;
 }
 
 .category-card h3 {
