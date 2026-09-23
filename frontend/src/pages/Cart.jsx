@@ -42,16 +42,20 @@ function Cart() {
                 className="cart-item"
                 key={item.cartId}
               >
-                <div className="cart-item-image">
-                  {item.image ? (
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                    />
-                  ) : (
-                    <span>PRODUCT IMAGE</span>
-                  )}
-                </div>
+               <div className="cart-item-image">
+                    {item.image_url || item.imageUrl || item.image ? (
+                      <img
+                        src={
+                          item.image_url ||
+                          item.imageUrl ||
+                          item.image
+                        }
+                        alt={item.name}
+                      />
+                    ) : (
+                      <span>PRODUCT IMAGE</span>
+                    )}
+                  </div>
 
                 <div className="cart-item-info">
                   <h3>{item.name}</h3>
@@ -117,9 +121,10 @@ function Cart() {
               <strong>₹{subtotal}</strong>
             </div>
 
-            <p className="shipping-note">
-              Shipping charges will be calculated at checkout.
-            </p>
+              <div className="summary-row">
+                <span>Shipping</span>
+                <strong>FREE</strong>
+              </div>
 
             <Link
                 to="/checkout"

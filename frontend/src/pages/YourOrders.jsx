@@ -443,21 +443,7 @@ function YourOrders() {
                     SHIPPING FOOTER
                 ========================= */}
 
-                <div className="order-card-footer">
-
-                  <div>
-                    <span>
-                      Shipping
-                    </span>
-
-                    <strong>
-                      {Number(
-                        order.shipping_charge
-                      ) === 0
-                        ? "FREE"
-                        : `₹${order.shipping_charge}`}
-                    </strong>
-                  </div>
+               <div className="order-card-footer">
 
                   {order.courier_name && (
 

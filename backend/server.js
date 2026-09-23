@@ -61,7 +61,7 @@ app.use((req, res, next) => {
 
   const blockedRoutes = [
     "POST /api/auth/register",
-    "POST /api/orders",
+    "POST POST /api/orders",
     "POST /api/payments/create-razorpay-order"
   ];
 
@@ -1544,11 +1544,9 @@ app.post(
         });
       }
 
-      const shippingCharge =
-        subtotal >= 999 ? 0 : 99;
+      const shippingCharge = 0;
 
-      const totalAmount =
-        subtotal + shippingCharge;
+      const totalAmount = subtotal;
 
       /*
         Start database transaction.
@@ -2703,8 +2701,8 @@ app.post(
         If product doesn't already have a main image,
         use the first Cloudinary image.
       */
-      if (
-        !productResult.rows[0].image_url &&
+     if (
+        existingImagesResult.rows[0].count === 0 &&
         insertedImages.length > 0
       ) {
         await client.query(

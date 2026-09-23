@@ -57,9 +57,8 @@ function Checkout() {
     0
   );
 
-  const shipping = subtotal >= 999 ? 0 : 99;
-
-  const total = subtotal + shipping;
+const shipping = 0;
+const total = subtotal;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
