@@ -52,6 +52,232 @@ const PORT = process.env.PORT || 5000;
 // =========================
 
 app.use(cors());
+
+// =========================
+// RAZORPAY WEBHOOK
+// MUST BE BEFORE express.json()
+// =========================
+
+app.post(
+  "/api/payments/razorpay-webhook",
+  express.raw({
+    type: "application/json",
+  }),
+  async (req, res) => {
+    try {
+      const webhookSignature =
+        req.headers["x-razorpay-signature"];
+
+      if (!webhookSignature) {
+        return res.status(400).send(
+          "Missing Razorpay signature."
+        );
+      }
+
+      const expectedSignature =
+        crypto
+          .createHmac(
+            "sha256",
+            process.env.RAZORPAY_WEBHOOK_SECRET
+          )
+          .update(req.body)
+          .digest("hex");
+
+      const expectedBuffer =
+        Buffer.from(expectedSignature);
+
+      const receivedBuffer =
+        Buffer.from(webhookSignature);
+
+      if (
+        expectedBuffer.length !==
+          receivedBuffer.length ||
+        !crypto.timingSafeEqual(
+          expectedBuffer,
+          receivedBuffer
+        )
+      ) {
+        console.error(
+          "Invalid Razorpay webhook signature."
+        );
+
+        return res
+          .status(400)
+          .send("Invalid signature.");
+      }
+
+      const event =
+        JSON.parse(
+          req.body.toString("utf8")
+        );
+
+      console.log(
+        "Razorpay webhook received:",
+        event.event
+      );
+
+      // =========================
+      // PAYMENT CAPTURED
+      // =========================
+
+      if (
+        event.event ===
+        "payment.captured"
+      ) {
+        const payment =
+          event.payload?.payment?.entity;
+
+        if (
+          !payment?.id ||
+          !payment?.order_id
+        ) {
+          return res
+            .status(400)
+            .send(
+              "Invalid payment payload."
+            );
+        }
+
+        const orderResult =
+          await pool.query(
+            `
+            SELECT
+              id,
+              total_amount,
+              payment_status
+            FROM orders
+            WHERE razorpay_order_id = $1
+            `,
+            [payment.order_id]
+          );
+
+        if (
+          orderResult.rows.length === 0
+        ) {
+          console.error(
+            "Webhook order not found:",
+            payment.order_id
+          );
+
+          return res
+            .status(200)
+            .send("Order not found.");
+        }
+
+        const order =
+          orderResult.rows[0];
+
+        const expectedAmount =
+          Math.round(
+            Number(order.total_amount) *
+              100
+          );
+
+        if (
+          Number(payment.amount) !==
+          expectedAmount
+        ) {
+          console.error(
+            "Razorpay amount mismatch.",
+            {
+              orderId: order.id,
+              expectedAmount,
+              receivedAmount:
+                payment.amount,
+            }
+          );
+
+          return res
+            .status(400)
+            .send("Amount mismatch.");
+        }
+
+        if (
+          payment.currency !== "INR"
+        ) {
+          console.error(
+            "Unexpected Razorpay currency:",
+            payment.currency
+          );
+
+          return res
+            .status(400)
+            .send("Currency mismatch.");
+        }
+
+        await pool.query(
+          `
+          UPDATE orders
+          SET
+            razorpay_payment_id = $1,
+            payment_status = 'paid',
+            order_status = 'confirmed',
+            updated_at = CURRENT_TIMESTAMP
+          WHERE
+            razorpay_order_id = $2
+            AND payment_status <> 'paid'
+          `,
+          [
+            payment.id,
+            payment.order_id,
+          ]
+        );
+
+        console.log(
+          `Order ${order.id} confirmed by Razorpay webhook.`
+        );
+      }
+
+      // =========================
+      // PAYMENT FAILED
+      // =========================
+
+      if (
+        event.event ===
+        "payment.failed"
+      ) {
+        const payment =
+          event.payload?.payment?.entity;
+
+        if (payment?.order_id) {
+          await pool.query(
+            `
+            UPDATE orders
+            SET
+              payment_status = 'failed',
+              updated_at = CURRENT_TIMESTAMP
+            WHERE
+              razorpay_order_id = $1
+              AND payment_status <> 'paid'
+            `,
+            [payment.order_id]
+          );
+
+          console.log(
+            "Razorpay payment failed:",
+            payment.order_id
+          );
+        }
+      }
+
+      return res
+        .status(200)
+        .send("Webhook processed.");
+
+    } catch (error) {
+      console.error(
+        "Razorpay webhook error:",
+        error
+      );
+
+      return res
+        .status(500)
+        .send("Webhook processing failed.");
+    }
+  }
+);
+
+// Normal JSON parser AFTER webhook
 app.use(express.json());
 
 // Temporary site pause control
