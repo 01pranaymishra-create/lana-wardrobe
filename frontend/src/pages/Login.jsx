@@ -128,7 +128,7 @@ function Login() {
         setSubmitting(true);
 
         const response = await fetch(
-          "http://localhost:5000/api/auth/google",
+          "https://api.lanawardrobe.in/api/auth/google",
           {
             method: "POST",
 
