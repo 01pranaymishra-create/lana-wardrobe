@@ -5,6 +5,7 @@ const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require("google-auth-library");
 const { Resend } = require("resend");
 
 const Razorpay = require("razorpay");
@@ -32,6 +33,9 @@ const {
 } = require("./services/ekartPayload");
 
 const app = express();
+const googleClient = new OAuth2Client(
+  process.env.GOOGLE_CLIENT_ID
+);
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
@@ -1100,6 +1104,181 @@ app.post("/api/auth/login", async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Failed to login.",
+    });
+  }
+});
+
+
+// =========================
+// GOOGLE LOGIN
+// =========================
+
+app.post("/api/auth/google", async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        success: false,
+        message: "Google credential is required.",
+      });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload || !payload.email) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid Google account.",
+      });
+    }
+
+    if (!payload.email_verified) {
+      return res.status(401).json({
+        success: false,
+        message: "Google email is not verified.",
+      });
+    }
+
+    const normalizedEmail =
+      payload.email.trim().toLowerCase();
+
+    const fullName =
+      payload.name?.trim() ||
+      normalizedEmail.split("@")[0];
+
+    let result = await pool.query(
+      `
+      SELECT
+        id,
+        full_name,
+        email,
+        phone,
+        role,
+        is_active,
+        email_verified
+      FROM users
+      WHERE email = $1
+      `,
+      [normalizedEmail]
+    );
+
+    let user;
+
+    if (result.rows.length > 0) {
+      user = result.rows[0];
+
+      if (!user.is_active) {
+        return res.status(403).json({
+          success: false,
+          message:
+            "This account is currently disabled.",
+        });
+      }
+
+      if (!user.email_verified) {
+        const verifiedResult =
+          await pool.query(
+            `
+            UPDATE users
+            SET
+              email_verified = TRUE,
+              updated_at = CURRENT_TIMESTAMP
+            WHERE id = $1
+            RETURNING
+              id,
+              full_name,
+              email,
+              phone,
+              role,
+              is_active,
+              email_verified
+            `,
+            [user.id]
+          );
+
+        user = verifiedResult.rows[0];
+      }
+    } else {
+      const randomPassword =
+        crypto.randomBytes(32).toString("hex");
+
+      const passwordHash =
+        await bcrypt.hash(
+          randomPassword,
+          12
+        );
+
+      const createResult =
+        await pool.query(
+          `
+          INSERT INTO users (
+            full_name,
+            email,
+            phone,
+            password_hash,
+            email_verified
+          )
+          VALUES ($1, $2, $3, $4, TRUE)
+          RETURNING
+            id,
+            full_name,
+            email,
+            phone,
+            role,
+            is_active,
+            email_verified
+          `,
+          [
+            fullName,
+            normalizedEmail,
+            null,
+            passwordHash,
+          ]
+        );
+
+      user = createResult.rows[0];
+    }
+
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        role: user.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    return res.json({
+      success: true,
+      message:
+        "Google login successful.",
+      token,
+      user: {
+        id: user.id,
+        fullName: user.full_name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+      },
+    });
+  } catch (error) {
+    console.error(
+      "Google login error:",
+      error
+    );
+
+    return res.status(401).json({
+      success: false,
+      message:
+        "Google authentication failed.",
     });
   }
 });

@@ -325,3 +325,63 @@
 .auth-page .auth-forgot-row a:hover {
   text-decoration: underline;
 }
+
+.google-login-section {
+  display: flex;
+  justify-content: center;
+  margin: 25px 0 18px;
+}
+
+.google-login-button {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin: 10px 0 22px;
+  color: #999999;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: #dddddd;
+}
+
+.auth-divider span {
+  white-space: nowrap;
+}
+
+.google-login-section {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 25px 0 18px;
+}
+
+.google-login-button {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  .google-login-section {
+    padding: 0;
+  }
+
+  .google-login-button {
+    max-width: 100%;
+  }
+}
