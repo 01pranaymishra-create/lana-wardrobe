@@ -2324,6 +2324,15 @@ button {
   color: #ffffff;
 }
 
+.footer-admin-link {
+  opacity: 0.6;
+  font-size: 13px;
+}
+
+.footer-admin-link:hover {
+  opacity: 1;
+}
+
 @media (max-width: 900px) {
   .footer {
     grid-template-columns: repeat(2, 1fr);

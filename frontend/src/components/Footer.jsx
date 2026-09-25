@@ -51,6 +51,10 @@ function Footer() {
         <Link to="/privacy-policy">
           Privacy Policy
         </Link>
+
+         <Link to="/admin" className="footer-admin-link">
+          Admin Login
+        </Link>
       </div>
 
     </footer>
