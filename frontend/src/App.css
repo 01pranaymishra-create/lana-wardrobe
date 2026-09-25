@@ -29,11 +29,12 @@ button {
 ========================= */
 
 .navbar {
-  height: 110px;
-  padding: 0 5%;
+  height: 120px;
+  padding: 0 4%;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 24px;
   background: #ffffff;
   border-bottom: 1px solid #e8e3dc;
   position: relative;
@@ -43,6 +44,8 @@ button {
 .navbar .logo {
   display: flex;
   align-items: center;
+  flex: 0 0 auto;
+  height: 100%;
   text-decoration: none;
 }
 
@@ -50,22 +53,32 @@ button {
   display: block;
   width: auto;
   height: 100px;
+  max-width: 180px;
   object-fit: contain;
 }
 
 .main-nav {
   display: flex;
-  align-items: center;
-  gap: 28px;
+  align-items: stretch;
+  justify-content: center;
+  flex: 1 1 auto;
+  align-self: stretch;
+  min-width: 0;
+  gap: 26px;
 }
 
 .main-nav > a,
-.nav-dropdown-button {
-  font-family: inherit;
+.main-nav .nav-dropdown-button {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  font-family: Arial, Helvetica, sans-serif;
   font-size: 14px;
   font-weight: 400;
-  line-height: 1.2;
-
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
   color: #111111;
   text-decoration: none;
   background: transparent;
@@ -74,32 +87,34 @@ button {
 }
 
 .main-nav > a:hover,
-.nav-dropdown-button:hover {
+.main-nav .nav-dropdown-button:hover {
   opacity: 0.55;
 }
 
-/* Dropdown wrapper */
+/* Dropdown */
 
 .nav-dropdown {
   position: relative;
+  display: flex;
+  align-items: stretch;
+  height: 100%;
 }
-
-/* Dropdown button */
 
 .nav-dropdown-button {
-  display: flex;
-  align-items: center;
   gap: 5px;
-  padding: 30px 0;
+  padding: 0;
+  appearance: none;
+  -webkit-appearance: none;
 }
+
 .nav-dropdown-button span {
   font-size: 12px;
   line-height: 1;
 }
 
-/* Dropdown menu */
-
-.dropdown-menu {
+/* Supports both dropdown class names used in the project. */
+.dropdown-menu,
+.nav-dropdown-menu {
   position: absolute;
   top: 100%;
   left: 0;
@@ -107,18 +122,19 @@ button {
   background: #ffffff;
   border: 1px solid #e8e3dc;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-
+  z-index: 1000;
   opacity: 0;
   visibility: hidden;
   transform: translateY(8px);
-
+  pointer-events: none;
   transition:
     opacity 0.2s ease,
     transform 0.2s ease,
     visibility 0.2s ease;
 }
 
-.dropdown-menu a {
+.dropdown-menu a,
+.nav-dropdown-menu a {
   display: block;
   padding: 13px 18px;
   font-size: 14px;
@@ -127,114 +143,26 @@ button {
   white-space: nowrap;
 }
 
-.dropdown-menu a:hover {
+.dropdown-menu a:hover,
+.nav-dropdown-menu a:hover {
   background: #f8f5f0;
   color: #111111;
 }
 
-/* Show dropdown on hover */
-
-.nav-dropdown:hover .dropdown-menu {
+.nav-dropdown:hover .dropdown-menu,
+.nav-dropdown:hover .nav-dropdown-menu {
   opacity: 1;
   visibility: visible;
   transform: translateY(0);
+  pointer-events: auto;
 }
 
-/* Right-side icons */
-
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.nav-actions button {
-  border: none;
-  background: transparent;
-  font-size: 17px;
-  cursor: pointer;
-  padding: 5px;
-}
-
-.nav-actions button:hover {
-  opacity: 0.6;
-}
-.cart-link {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  color: inherit;
-  padding: 5px;
-}
-
-.cart-icon {
-  font-size: 16px;
-}
-
-.cart-count {
-  position: absolute;
-  top: -5px;
-  right: -7px;
-
-  min-width: 17px;
-  height: 17px;
-  padding: 0 4px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  background: #111111;
-  color: #ffffff;
-
-  font-size: 10px;
-  font-weight: 600;
-}
-.wishlist-link {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  color: inherit;
-  padding: 5px;
-}
-
-.wishlist-icon {
-  font-size: 24px;
-}
-
-.wishlist-count {
-  position: absolute;
-  top: -5px;
-  right: -7px;
-
-  min-width: 17px;
-  height: 17px;
-  padding: 0 4px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-  background: #111111;
-  color: #ffffff;
-
-  font-size: 10px;
-  font-weight: 600;
-}
-/* =========================
-   NAVBAR SEARCH
-========================= */
+/* Right side: search + wishlist/cart */
 
 .nav-right {
   display: flex;
   align-items: center;
+  flex: 0 0 auto;
   gap: 14px;
 }
 
@@ -242,7 +170,7 @@ button {
   display: flex;
   align-items: center;
   width: 220px;
-  height: 38px;
+  height: 40px;
   background: #ffffff;
   border: 1px solid #d8d2ca;
   border-radius: 4px;
@@ -268,6 +196,9 @@ button {
 .navbar-search button {
   width: 42px;
   height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   background: transparent;
   cursor: pointer;
@@ -277,26 +208,152 @@ button {
 .navbar-search button:hover {
   background: #f8f5f0;
 }
-/* Tablet / Mobile */
 
-@media (max-width: 1000px) {
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nav-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  font-size: 17px;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.nav-actions button:hover {
+  opacity: 0.6;
+}
+
+.cart-link,
+.wishlist-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: inherit;
+  padding: 5px;
+}
+
+.cart-icon {
+  font-size: 16px;
+}
+
+.wishlist-icon {
+  font-size: 24px;
+}
+
+.cart-count,
+.wishlist-count {
+  position: absolute;
+  top: -5px;
+  right: -7px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: #111111;
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+/* Navbar responsive adjustments */
+
+@media (max-width: 1200px) {
+  .navbar {
+    padding: 0 3%;
+    gap: 16px;
+  }
+
+  .navbar-logo {
+    height: 92px;
+    max-width: 160px;
+  }
+
   .main-nav {
     gap: 18px;
   }
 
   .main-nav > a,
-  .nav-dropdown-button {
+  .main-nav .nav-dropdown-button {
     font-size: 13px;
   }
 
+  .navbar-search {
+    width: 180px;
+  }
+
+  .nav-right {
+    gap: 10px;
+  }
+}
+
+@media (max-width: 1000px) {
+  .navbar {
+    height: 105px;
+  }
+
   .navbar-logo {
-    height: 52px;
+    height: 82px;
+    max-width: 145px;
+  }
+
+  .main-nav {
+    gap: 13px;
+  }
+
+  .navbar-search {
+    width: 165px;
   }
 }
 
 @media (max-width: 800px) {
+  .navbar {
+    height: 90px;
+    padding: 0 4%;
+  }
+
   .main-nav {
     display: none;
+  }
+
+  .navbar-logo {
+    height: 70px;
+    max-width: 125px;
+  }
+
+  .navbar-search {
+    width: 180px;
+  }
+}
+
+@media (max-width: 560px) {
+  .navbar {
+    gap: 10px;
+  }
+
+  .navbar-logo {
+    height: 64px;
+    max-width: 110px;
+  }
+
+  .navbar-search {
+    width: 145px;
+  }
+
+  .nav-right,
+  .nav-actions {
+    gap: 7px;
   }
 }
 
@@ -2156,68 +2213,6 @@ button {
     align-items: flex-start;
     flex-direction: column;
   }
-}
-
-.nav-dropdown {
-  position: relative;
-}
-
-.nav-dropdown-button {
-  border: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-  padding: 0;
-}
-
-.nav-dropdown-menu {
-  position: absolute;
-  top: 28px;
-  left: 0;
-
-  min-width: 190px;
-
-  background: #ffffff;
-  border: 1px solid #e5e0da;
-
-  display: none;
-  flex-direction: column;
-
-  z-index: 1000;
-}
-
-.nav-dropdown:hover .nav-dropdown-menu {
-  display: flex;
-}
-
-.nav-dropdown-menu a {
-  padding: 13px 16px;
-  color: #111111;
-  text-decoration: none;
-  white-space: nowrap;
-}
-
-.nav-dropdown-menu a:hover {
-  background: #f8f5f0;
-}
-/* =========================
-   NAVBAR FONT FIX
-========================= */
-
-.main-nav > a,
-.main-nav .nav-dropdown-button {
-  font-family: Arial, sans-serif !important;
-  font-size: 14px !important;
-  font-weight: 400 !important;
-  line-height: 1 !important;
-  letter-spacing: normal !important;
-  text-transform: none !important;
-}
-
-.main-nav .nav-dropdown-button {
-  appearance: none;
-  -webkit-appearance: none;
 }
 
 /* =========================
