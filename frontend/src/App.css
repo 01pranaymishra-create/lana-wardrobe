@@ -6022,13 +6022,13 @@ button {
   }
 
   .navbar-logo {
-    height: 40px;
+    height: 55px;
     width : auto;
   }
 
   .navbar-search {
-    width: 160px;
-    max-width: 160px;
+    width: 150px;
+    max-width: 150px;
     min-width: 70px;
   }
 
