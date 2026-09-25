@@ -942,6 +942,8 @@ function AdminShipping() {
 
                         {/* CREATE FORM */}
 
+                        {/* CREATE FORM */}
+
                         <div className="admin-shipment-form">
 
                           <h3>
@@ -995,30 +997,6 @@ function AdminShipping() {
                                   handleFormChange(
                                     order.id,
                                     "weight",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <label>
-                                Shipping Cost (₹)
-                              </label>
-
-                              <input
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="90"
-                                value={getFormValue(
-                                  order.id,
-                                  "shippingCost"
-                                )}
-                                onChange={(e) =>
-                                  handleFormChange(
-                                    order.id,
-                                    "shippingCost",
                                     e.target.value
                                   )
                                 }
@@ -1091,50 +1069,6 @@ function AdminShipping() {
                                   handleFormChange(
                                     order.id,
                                     "height",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <label>
-                                AWB Number
-                              </label>
-
-                              <input
-                                type="text"
-                                placeholder="Optional for now"
-                                value={getFormValue(
-                                  order.id,
-                                  "awbNumber"
-                                )}
-                                onChange={(e) =>
-                                  handleFormChange(
-                                    order.id,
-                                    "awbNumber",
-                                    e.target.value
-                                  )
-                                }
-                              />
-                            </div>
-
-                            <div>
-                              <label>
-                                Tracking URL
-                              </label>
-
-                              <input
-                                type="url"
-                                placeholder="Optional for now"
-                                value={getFormValue(
-                                  order.id,
-                                  "trackingUrl"
-                                )}
-                                onChange={(e) =>
-                                  handleFormChange(
-                                    order.id,
-                                    "trackingUrl",
                                     e.target.value
                                   )
                                 }
