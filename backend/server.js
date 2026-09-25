@@ -5390,6 +5390,8 @@ const {
   getEkartAccessToken,
   createEkartShipment,
   checkEkartServiceability,
+  trackEkartShipment,
+  normalizeEkartStatus,
 } = require("./services/ekartService");
 
 app.get(
@@ -5983,6 +5985,166 @@ app.post(
 
     } finally {
       client.release();
+    }
+  }
+);
+
+// ========================================
+// GET LIVE EKART TRACKING STATUS
+// ========================================
+
+app.get(
+  "/api/admin/ekart/track/:trackingId",
+  authenticateUser,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const trackingId =
+        String(
+          req.params.trackingId || ""
+        ).trim();
+
+      if (!trackingId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Ekart tracking ID is required.",
+        });
+      }
+
+      const trackingResult =
+        await trackEkartShipment(
+          trackingId
+        );
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "Ekart tracking status fetched successfully.",
+        tracking: trackingResult,
+      });
+
+    } catch (error) {
+      console.error(
+        "Ekart tracking route error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          error.message ||
+          "Failed to fetch Ekart tracking status.",
+      });
+    }
+  }
+);
+
+// ========================================
+// SYNC EKART SHIPMENT STATUS
+// ========================================
+
+app.post(
+  "/api/admin/ekart/sync/:trackingId",
+  authenticateUser,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const trackingId =
+        String(
+          req.params.trackingId || ""
+        ).trim();
+
+      if (!trackingId) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Ekart tracking ID is required.",
+        });
+      }
+
+      // 1. Fetch current status from Ekart
+      const tracking =
+        await trackEkartShipment(
+          trackingId
+        );
+
+      const ekartStatus =
+        tracking.status;
+
+      const normalizedStatus =
+        normalizeEkartStatus(
+          ekartStatus
+        );
+
+      // 2. Update shipment only
+      const result =
+        await pool.query(
+          `
+          UPDATE shipments
+          SET
+            shipment_status = $1,
+            updated_at = CURRENT_TIMESTAMP
+          WHERE provider_shipment_id = $2
+          RETURNING *
+          `,
+          [
+            normalizedStatus,
+            trackingId,
+          ]
+        );
+
+      if (
+        result.rows.length === 0
+      ) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Shipment not found in Lana Wardrobe.",
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+
+        message:
+          "Ekart shipment status synchronized successfully.",
+
+        ekartStatus,
+
+        shipmentStatus:
+          normalizedStatus,
+
+        tracking: {
+          description:
+            tracking.description,
+
+          location:
+            tracking.location,
+
+          updatedAt:
+            tracking.updatedAt,
+
+          estimatedDelivery:
+            tracking.estimatedDelivery,
+        },
+
+        shipment:
+          result.rows[0],
+      });
+
+    } catch (error) {
+      console.error(
+        "Ekart shipment sync error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          error.message ||
+          "Failed to synchronize Ekart shipment status.",
+      });
     }
   }
 );

@@ -283,8 +283,206 @@ async function checkEkartServiceability(pincode) {
   }
 }
 
+// ========================================
+// TRACK EKART SHIPMENT
+// ========================================
+
+async function trackEkartShipment(trackingId) {
+  try {
+    const id = String(
+      trackingId || ""
+    ).trim();
+
+    if (!id) {
+      throw new Error(
+        "Ekart tracking ID is required."
+      );
+    }
+
+    const response = await fetch(
+      `${EKART_BASE_URL}/api/v1/track/${encodeURIComponent(
+        id
+      )}`,
+      {
+        method: "GET",
+
+        headers: {
+          Accept: "application/json",
+        },
+      }
+    );
+
+    let data;
+
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error(
+        "Ekart returned an invalid tracking response."
+      );
+    }
+
+    if (!response.ok) {
+      console.error(
+        "Ekart tracking response:",
+        data
+      );
+
+      throw new Error(
+        data.message ||
+          data.description ||
+          "Failed to fetch Ekart tracking status."
+      );
+    }
+
+    return {
+      success: true,
+
+      trackingId:
+        data._id || id,
+
+      status:
+        data.track?.status || null,
+
+      description:
+        data.track?.desc || null,
+
+      location:
+        data.track?.location || null,
+
+      updatedAt:
+        data.track?.ctime || null,
+
+      pickupTime:
+        data.track?.pickupTime || null,
+
+      estimatedDelivery:
+        data.edd || null,
+
+      ndrStatus:
+        data.track?.ndrStatus || null,
+
+      attempts:
+        data.track?.attempts ?? null,
+
+      ndrActions:
+        data.track?.ndrActions || [],
+
+      history:
+        data.track?.details || [],
+
+      orderNumber:
+        data.order_number || null,
+
+      rawResponse:
+        data,
+    };
+
+  } catch (error) {
+    console.error(
+      "Track Ekart shipment error:",
+      error
+    );
+
+    throw error;
+  }
+}
+
+// ========================================
+// NORMALIZE EKART STATUS
+// ========================================
+
+function normalizeEkartStatus(status) {
+  const value = String(
+    status || ""
+  )
+    .trim()
+    .toLowerCase();
+
+  const statusMap = {
+    "order placed": "created",
+
+    "pickup pending":
+      "pickup_pending",
+
+    "pickup scheduled":
+      "pickup_scheduled",
+
+    "out for pickup":
+      "out_for_pickup",
+
+    "picked up":
+      "picked_up",
+
+    "in transit":
+      "in_transit",
+
+    "out for delivery":
+      "out_for_delivery",
+
+    delivered:
+      "delivered",
+
+    cancelled:
+      "cancelled",
+
+    "seller cancelled":
+      "cancelled",
+
+    "pickup cancelled":
+      "cancelled",
+
+    "shipment delayed":
+      "shipment_delayed",
+
+    undelivered:
+      "undelivered",
+
+    lost:
+      "lost",
+
+    damaged:
+      "damaged",
+
+    "not serviceable":
+      "not_serviceable",
+
+    "not picked":
+      "not_picked",
+
+    "rto requested":
+      "rto_requested",
+
+    "seller rto requested":
+      "rto_requested",
+
+    "rto in transit":
+      "rto_in_transit",
+
+    "rto out for delivery":
+      "rto_out_for_delivery",
+
+    "rto delivered":
+      "rto_delivered",
+
+    "rto failed":
+      "rto_failed",
+
+    "rto shipment delayed":
+      "rto_delayed",
+  };
+
+  return (
+    statusMap[value] ||
+    value.replace(/\s+/g, "_") ||
+    "unknown"
+  );
+}
+
 module.exports = {
   getEkartAccessToken,
   createEkartShipment,
   checkEkartServiceability,
+  trackEkartShipment,
+  normalizeEkartStatus,
 };
