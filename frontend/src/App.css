@@ -170,7 +170,7 @@ button {
 }
 
 .cart-icon {
-  font-size: 17px;
+  font-size: 16px;
 }
 
 .cart-count {
@@ -205,7 +205,7 @@ button {
 }
 
 .wishlist-icon {
-  font-size: 20px;
+  font-size: 24px;
 }
 
 .wishlist-count {
@@ -6022,12 +6022,12 @@ button {
   }
 
   .navbar-logo {
-    height: 55px;
+    height: 65px;
   }
 
   .navbar-search {
-    width: 80px;
-    max-width: 80px;
+    width: 110px;
+    max-width: 110px;
     min-width: 70px;
   }
 
