@@ -5506,12 +5506,33 @@ app.get(
       // BUILD EKART PAYLOAD
       // -------------------------------
 
-      const payload =
-        buildEkartShipmentPayload({
-          order,
-          items:
-            itemsResult.rows,
-        });
+      const {
+  weight,
+  length,
+  width,
+  height,
+} = req.query;
+
+const payload =
+  buildEkartShipmentPayload({
+    order,
+    items:
+      itemsResult.rows,
+
+    packageDetails: {
+      weight:
+        Number(weight),
+
+      length:
+        Number(length),
+
+      width:
+        Number(width),
+
+      height:
+        Number(height),
+    },
+  });
 
       return res.json({
         success: true,
