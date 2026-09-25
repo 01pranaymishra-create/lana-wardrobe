@@ -5596,7 +5596,28 @@ app.post(
     try {
       const orderId =
         Number(req.params.orderId);
-
+      const {
+        weight,
+        length,
+        width,
+        height,
+      } = req.body;
+        if (
+  !weight ||
+  Number(weight) <= 0 ||
+  !length ||
+  Number(length) <= 0 ||
+  !width ||
+  Number(width) <= 0 ||
+  !height ||
+  Number(height) <= 0
+) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "Valid package weight and dimensions are required.",
+  });
+}
       if (
         !Number.isInteger(orderId) ||
         orderId <= 0
@@ -5769,13 +5790,27 @@ app.post(
       // =====================================
       // 7. BUILD EKART PAYLOAD
       // =====================================
-
+      
       const payload =
-        buildEkartShipmentPayload({
-          order,
-          items:
-            itemsResult.rows,
-        });
+  buildEkartShipmentPayload({
+    order,
+    items:
+      itemsResult.rows,
+
+    packageDetails: {
+      weight:
+        Number(weight),
+
+      length:
+        Number(length),
+
+      width:
+        Number(width),
+
+      height:
+        Number(height),
+    },
+  });
 
       // =====================================
       // 8. CREATE SHIPMENT WITH EKART

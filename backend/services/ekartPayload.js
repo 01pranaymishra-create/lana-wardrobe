@@ -1,6 +1,7 @@
 function buildEkartShipmentPayload({
   order,
   items,
+  packageDetails = {},
 }) {
   if (!order) {
     throw new Error(
@@ -81,39 +82,53 @@ const taxValue =
       ? totalAmount
       : 0;
 
-const itemWeight =
-  Number(
-    process.env.DEFAULT_ITEM_WEIGHT ||
-      250
-  );
+const enteredWeightKg =
+  Number(packageDetails.weight);
 
 const weight =
-  Math.max(
-    Math.ceil(
-      itemWeight * totalQuantity
-    ),
-    1
-  );
+  enteredWeightKg > 0
+    ? Math.round(
+        enteredWeightKg * 1000
+      )
+    : Math.max(
+        Math.ceil(
+          Number(
+            process.env
+              .DEFAULT_ITEM_WEIGHT ||
+              250
+          ) * totalQuantity
+        ),
+        1
+      );
 
-  const length =
-    Number(
-      process.env.DEFAULT_PACKAGE_LENGTH ||
-        25
-    );
+const length =
+  Number(packageDetails.length) > 0
+    ? Number(packageDetails.length)
+    : Number(
+        process.env
+          .DEFAULT_PACKAGE_LENGTH ||
+          25
+      );
 
-  const width =
-    Number(
-      process.env.DEFAULT_PACKAGE_WIDTH ||
-        20
-    );
+const width =
+  Number(packageDetails.width) > 0
+    ? Number(packageDetails.width)
+    : Number(
+        process.env
+          .DEFAULT_PACKAGE_WIDTH ||
+          20
+      );
 
-  const height =
-    Number(
-      process.env.DEFAULT_PACKAGE_HEIGHT ||
-        5
-    );
-
-  const invoiceNumber =
+const height =
+  Number(packageDetails.height) > 0
+    ? Number(packageDetails.height)
+    : Number(
+        process.env
+          .DEFAULT_PACKAGE_HEIGHT ||
+          5
+      );
+      
+const invoiceNumber =
     `LW-${order.id}`;
 
   const invoiceDate =

@@ -311,73 +311,34 @@ function AdminShipping() {
           );
 
         const response =
-          await fetch(
-            "https://api.lanawardrobe.in/api/admin/shipments",
-            {
-              method: "POST",
+  await fetch(
+    `https://api.lanawardrobe.in/api/admin/ekart/create-shipment/${order.id}`,
+    {
+      method: "POST",
 
-              headers: {
-                "Content-Type":
-                  "application/json",
+      headers: {
+        "Content-Type":
+          "application/json",
 
-                Authorization:
-                  `Bearer ${token}`,
-              },
+        Authorization:
+          `Bearer ${token}`,
+      },
 
-              body: JSON.stringify({
-                orderId:
-                  order.id,
+      body: JSON.stringify({
+        weight:
+          Number(form.weight),
 
-                shipmentProvider:
-                  "Ekart",
+        length:
+          Number(form.length),
 
-                courierName:
-                  "Ekart",
+        width:
+          Number(form.width),
 
-                providerShipmentId:
-                  form.providerShipmentId ||
-                  "",
-
-                awbNumber:
-                  form.awbNumber ||
-                  "",
-
-                trackingUrl:
-                  form.trackingUrl ||
-                  "",
-
-                shipmentStatus:
-                  "pending",
-
-                weight:
-                  Number(
-                    form.weight
-                  ),
-
-                length:
-                  Number(
-                    form.length
-                  ),
-
-                width:
-                  Number(
-                    form.width
-                  ),
-
-                height:
-                  Number(
-                    form.height
-                  ),
-
-                shippingCost:
-                  form.shippingCost
-                    ? Number(
-                        form.shippingCost
-                      )
-                    : null,
-              }),
-            }
-          );
+        height:
+          Number(form.height),
+      }),
+    }
+  );
 
         const data =
           await response.json();
