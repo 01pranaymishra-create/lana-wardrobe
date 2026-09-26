@@ -46,6 +46,11 @@ function AdminShipping() {
   ] = useState(null);
 
   const [
+  syncingShipmentId,
+  setSyncingShipmentId,
+] = useState(null);
+
+  const [
     shipmentEditForms,
     setShipmentEditForms,
   ] = useState({});
@@ -634,6 +639,83 @@ function AdminShipping() {
         );
       }
     };
+
+// =========================
+// SYNC EKART STATUS
+// =========================
+
+const handleSyncEkartStatus =
+  async (shipment) => {
+    try {
+      const trackingId =
+        shipment.provider_shipment_id;
+
+      if (!trackingId) {
+        alert(
+          "Ekart tracking ID is not available for this shipment."
+        );
+        return;
+      }
+
+      setSyncingShipmentId(
+        shipment.id
+      );
+
+      const token =
+        localStorage.getItem(
+          "lana_token"
+        );
+
+      const response =
+        await fetch(
+          `https://api.lanawardrobe.in/api/admin/ekart/sync/${encodeURIComponent(
+            trackingId
+          )}`,
+          {
+            method: "POST",
+
+            headers: {
+              Authorization:
+                `Bearer ${token}`,
+            },
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to sync Ekart shipment status."
+        );
+      }
+
+      alert(
+        `Ekart status synced successfully.\n\nEkart: ${
+          data.ekartStatus || "-"
+        }\nLana Shipment: ${
+          data.shipmentStatus || "-"
+        }`
+      );
+
+      await fetchShippingData();
+
+    } catch (error) {
+      console.error(
+        "Ekart status sync error:",
+        error
+      );
+
+      alert(
+        error.message ||
+          "Failed to sync Ekart shipment status."
+      );
+
+    } finally {
+      setSyncingShipmentId(null);
+    }
+  };
 
   // =========================
   // LOADING
@@ -1264,22 +1346,41 @@ function AdminShipping() {
 
                       <div className="admin-shipment-view-action">
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setExpandedShipmentId(
-                              isExpanded
-                                ? null
-                                : shipment.id
-                            )
-                          }
-                        >
-                          {isExpanded
-                            ? "Hide Details"
-                            : "View Details"}
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedShipmentId(
+                                isExpanded
+                                  ? null
+                                  : shipment.id
+                              )
+                            }
+                          >
+                            {isExpanded
+                              ? "Hide Details"
+                              : "View Details"}
+                          </button>
 
-                      </div>
+                          <button
+                            type="button"
+                            className="admin-sync-shipment-button"
+                            onClick={() =>
+                              handleSyncEkartStatus(
+                                shipment
+                              )
+                            }
+                            disabled={
+                              syncingShipmentId ===
+                              shipment.id
+                            }
+                          >
+                            {syncingShipmentId ===
+                            shipment.id
+                              ? "Syncing..."
+                              : "Sync Status"}
+                          </button>
+
+                        </div>
 
                     </div>
 
