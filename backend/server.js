@@ -5392,6 +5392,7 @@ const {
   checkEkartServiceability,
   trackEkartShipment,
   normalizeEkartStatus,
+  mapEkartTrackingToOrderStatus,
 } = require("./services/ekartService");
 
 app.get(
@@ -6049,11 +6050,12 @@ app.post(
   authenticateUser,
   requireAdmin,
   async (req, res) => {
+    let client;
+
     try {
-      const trackingId =
-        String(
-          req.params.trackingId || ""
-        ).trim();
+      const trackingId = String(
+        req.params.trackingId || ""
+      ).trim();
 
       if (!trackingId) {
         return res.status(400).json({
@@ -6063,7 +6065,10 @@ app.post(
         });
       }
 
-      // 1. Fetch current status from Ekart
+      // =====================================
+      // 1. GET LIVE EKART STATUS
+      // =====================================
+
       const tracking =
         await trackEkartShipment(
           trackingId
@@ -6072,37 +6077,330 @@ app.post(
       const ekartStatus =
         tracking.status;
 
-      const normalizedStatus =
+      const shipmentStatus =
         normalizeEkartStatus(
           ekartStatus
         );
 
-      // 2. Update shipment only
-      const result =
-        await pool.query(
+      const mappedOrderStatus =
+        mapEkartTrackingToOrderStatus(
+          tracking
+        );
+
+      // =====================================
+      // 2. START DATABASE TRANSACTION
+      // =====================================
+
+      client =
+        await pool.connect();
+
+      await client.query("BEGIN");
+
+      // =====================================
+      // 3. LOCK SHIPMENT
+      // =====================================
+
+      const shipmentResult =
+        await client.query(
           `
-          UPDATE shipments
-          SET
-            shipment_status = $1,
-            updated_at = CURRENT_TIMESTAMP
-          WHERE provider_shipment_id = $2
-          RETURNING *
+          SELECT
+            id,
+            order_id,
+            shipment_status,
+            provider_shipment_id
+          FROM shipments
+          WHERE provider_shipment_id = $1
+          FOR UPDATE
           `,
-          [
-            normalizedStatus,
-            trackingId,
-          ]
+          [trackingId]
         );
 
       if (
-        result.rows.length === 0
+        shipmentResult.rows.length === 0
       ) {
+        await client.query(
+          "ROLLBACK"
+        );
+
         return res.status(404).json({
           success: false,
           message:
             "Shipment not found in Lana Wardrobe.",
         });
       }
+
+      const shipment =
+        shipmentResult.rows[0];
+
+      // =====================================
+      // 4. UPDATE SHIPMENT STATUS
+      // =====================================
+
+      const updatedShipmentResult =
+        await client.query(
+          `
+          UPDATE shipments
+          SET
+            shipment_status = $1,
+            updated_at =
+              CURRENT_TIMESTAMP
+          WHERE id = $2
+          RETURNING *
+          `,
+          [
+            shipmentStatus,
+            shipment.id,
+          ]
+        );
+
+      let updatedOrder = null;
+      let orderStatusUpdated = false;
+
+      // =====================================
+      // 5. OPTIONAL ORDER STATUS SYNC
+      // =====================================
+
+      if (mappedOrderStatus) {
+        const orderResult =
+          await client.query(
+            `
+            SELECT
+              id,
+              payment_method,
+              payment_status,
+              order_status,
+              courier_name,
+              tracking_number,
+              stock_restored
+            FROM orders
+            WHERE id = $1
+            FOR UPDATE
+            `,
+            [shipment.order_id]
+          );
+
+        if (
+          orderResult.rows.length === 0
+        ) {
+          await client.query(
+            "ROLLBACK"
+          );
+
+          return res.status(404).json({
+            success: false,
+            message:
+              "Order linked to shipment was not found.",
+          });
+        }
+
+        const order =
+          orderResult.rows[0];
+
+        let shouldUpdateOrder = true;
+
+        // =====================================
+        // TERMINAL STATUS PROTECTION
+        // =====================================
+
+        if (
+          order.order_status ===
+            "cancelled" ||
+          order.order_status ===
+            "delivered"
+        ) {
+          shouldUpdateOrder = false;
+        }
+
+        // =====================================
+        // PREVENT BACKWARD STATUS MOVEMENT
+        // =====================================
+
+        const statusRank = {
+          order_placed: 1,
+          confirmed: 2,
+          packed: 3,
+          shipped: 4,
+          out_for_delivery: 5,
+          delivered: 6,
+        };
+
+        if (
+          mappedOrderStatus !==
+            "cancelled" &&
+          statusRank[
+            order.order_status
+          ] &&
+          statusRank[
+            mappedOrderStatus
+          ] &&
+          statusRank[
+            mappedOrderStatus
+          ] <=
+            statusRank[
+              order.order_status
+            ]
+        ) {
+          shouldUpdateOrder = false;
+        }
+
+        // =====================================
+        // SAFE AUTO-CANCELLATION
+        // =====================================
+
+        if (
+          mappedOrderStatus ===
+          "cancelled"
+        ) {
+          const cancellableStatuses = [
+            "order_placed",
+            "confirmed",
+            "packed",
+          ];
+
+          if (
+            !cancellableStatuses.includes(
+              order.order_status
+            )
+          ) {
+            shouldUpdateOrder = false;
+          }
+        }
+
+        if (shouldUpdateOrder) {
+          // =================================
+          // SHIPPING VALIDATION
+          // =================================
+
+          const shippingStatuses = [
+            "shipped",
+            "out_for_delivery",
+            "delivered",
+          ];
+
+          if (
+            shippingStatuses.includes(
+              mappedOrderStatus
+            ) &&
+            (
+              !order.courier_name ||
+              !order.tracking_number
+            )
+          ) {
+            throw new Error(
+              "Order cannot be automatically moved to a shipping status because courier or tracking information is missing."
+            );
+          }
+
+          // =================================
+          // RESTORE STOCK ON CANCELLATION
+          // =================================
+
+          if (
+            mappedOrderStatus ===
+              "cancelled" &&
+            !order.stock_restored
+          ) {
+            const itemsResult =
+              await client.query(
+                `
+                SELECT
+                  product_id,
+                  quantity
+                FROM order_items
+                WHERE order_id = $1
+                `,
+                [order.id]
+              );
+
+            for (
+              const item
+              of itemsResult.rows
+            ) {
+              await client.query(
+                `
+                UPDATE products
+                SET
+                  stock =
+                    stock + $1,
+                  updated_at =
+                    CURRENT_TIMESTAMP
+                WHERE id = $2
+                `,
+                [
+                  item.quantity,
+                  item.product_id,
+                ]
+              );
+            }
+
+            await client.query(
+              `
+              UPDATE orders
+              SET stock_restored = TRUE
+              WHERE id = $1
+              `,
+              [order.id]
+            );
+          }
+
+          // =================================
+          // COD PAYMENT ON DELIVERY
+          // =================================
+
+          let paymentStatus =
+            order.payment_status;
+
+          if (
+            mappedOrderStatus ===
+              "delivered" &&
+            order.payment_method ===
+              "cod"
+          ) {
+            paymentStatus = "paid";
+          }
+
+          // =================================
+          // UPDATE ORDER
+          // =================================
+
+          const updatedOrderResult =
+            await client.query(
+              `
+              UPDATE orders
+              SET
+                order_status = $1,
+                payment_status = $2,
+                updated_at =
+                  CURRENT_TIMESTAMP
+              WHERE id = $3
+              RETURNING
+                id,
+                order_status,
+                payment_status,
+                courier_name,
+                tracking_number,
+                stock_restored,
+                updated_at
+              `,
+              [
+                mappedOrderStatus,
+                paymentStatus,
+                order.id,
+              ]
+            );
+
+          updatedOrder =
+            updatedOrderResult.rows[0];
+
+          orderStatusUpdated = true;
+        }
+      }
+
+      // =====================================
+      // 6. COMMIT EVERYTHING
+      // =====================================
+
+      await client.query("COMMIT");
 
       return res.status(200).json({
         success: true,
@@ -6112,8 +6410,11 @@ app.post(
 
         ekartStatus,
 
-        shipmentStatus:
-          normalizedStatus,
+        shipmentStatus,
+
+        mappedOrderStatus,
+
+        orderStatusUpdated,
 
         tracking: {
           description:
@@ -6130,10 +6431,23 @@ app.post(
         },
 
         shipment:
-          result.rows[0],
+          updatedShipmentResult.rows[0],
+
+        order:
+          updatedOrder,
       });
 
     } catch (error) {
+      if (client) {
+        try {
+          await client.query(
+            "ROLLBACK"
+          );
+        } catch {
+          // Ignore rollback error
+        }
+      }
+
       console.error(
         "Ekart shipment sync error:",
         error
@@ -6145,6 +6459,11 @@ app.post(
           error.message ||
           "Failed to synchronize Ekart shipment status.",
       });
+
+    } finally {
+      if (client) {
+        client.release();
+      }
     }
   }
 );

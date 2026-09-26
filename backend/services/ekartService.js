@@ -479,10 +479,54 @@ function normalizeEkartStatus(status) {
   );
 }
 
+// ========================================
+// MAP EKART STATUS TO LANA ORDER STATUS
+// ========================================
+
+function mapEkartTrackingToOrderStatus(
+  tracking
+) {
+  const status = String(
+    tracking?.status || ""
+  )
+    .trim()
+    .toLowerCase();
+
+  if (
+    status === "picked up" ||
+    status === "in transit"
+  ) {
+    return "shipped";
+  }
+
+  if (
+    status === "out for delivery"
+  ) {
+    return "out_for_delivery";
+  }
+
+  if (
+    status === "delivered"
+  ) {
+    return "delivered";
+  }
+
+  // Courier cancellation or exception
+  // should not automatically cancel
+  // the Lana Wardrobe customer order.
+
+  return null;
+}
+
+// ========================================
+// EXPORTS
+// ========================================
+
 module.exports = {
   getEkartAccessToken,
   createEkartShipment,
   checkEkartServiceability,
   trackEkartShipment,
   normalizeEkartStatus,
+  mapEkartTrackingToOrderStatus,
 };
