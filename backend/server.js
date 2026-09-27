@@ -500,13 +500,101 @@ console.log(
         console.error(
           "Ekart debug webhook received invalid JSON."
         );
-
+        
         return res.status(200).json({
           success: true,
           message:
             "Ekart debug webhook received.",
         });
       }
+
+      const webhookTopic =
+  req.headers["x-swift-webhook-topic"];
+
+if (
+  webhookTopic !== "track_updated"
+) {
+  console.log(
+    "Ignoring unsupported Ekart webhook topic:",
+    webhookTopic
+  );
+
+  return res.status(200).json({
+    success: true,
+    message:
+      "Webhook topic ignored safely.",
+  });
+}
+
+const webhookTrackingId =
+  String(
+    payload?.wbn ||
+    payload?.id ||
+    ""
+  ).trim();
+
+if (!webhookTrackingId) {
+  console.error(
+    "Ekart webhook has no tracking identifier."
+  );
+
+  return res.status(200).json({
+    success: true,
+    message:
+      "Webhook received without tracking identifier.",
+  });
+}
+
+const shipmentResult =
+  await pool.query(
+    `
+    SELECT
+      id,
+      order_id,
+      provider_shipment_id,
+      awb_number,
+      shipment_status
+    FROM shipments
+    WHERE
+      awb_number = $1
+      OR provider_shipment_id = $1
+    LIMIT 1
+    `,
+    [webhookTrackingId]
+  );
+
+if (
+  shipmentResult.rows.length === 0
+) {
+  console.warn(
+    "Ekart webhook shipment not found:",
+    webhookTrackingId
+  );
+
+  return res.status(200).json({
+    success: true,
+    message:
+      "Webhook received; shipment not found locally.",
+  });
+}
+
+const matchedShipment =
+  shipmentResult.rows[0];
+
+console.log(
+  "Ekart webhook matched Lana shipment:",
+  {
+    shipmentId:
+      matchedShipment.id,
+    orderId:
+      matchedShipment.order_id,
+    currentShipmentStatus:
+      matchedShipment.shipment_status,
+    ekartStatus:
+      payload?.status || null,
+  }
+);
+
 
       // -------------------------
       // SAFE HEADER LOGGING
