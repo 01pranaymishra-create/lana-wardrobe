@@ -581,6 +581,45 @@ if (
 const matchedShipment =
   shipmentResult.rows[0];
 
+  const normalizedShipmentStatus =
+  normalizeEkartStatus(
+    payload?.status
+  );
+
+const updatedShipmentResult =
+  await pool.query(
+    `
+    UPDATE shipments
+    SET
+      shipment_status = $1,
+      updated_at =
+        CURRENT_TIMESTAMP
+    WHERE id = $2
+    RETURNING
+      id,
+      order_id,
+      shipment_status,
+      updated_at
+    `,
+    [
+      normalizedShipmentStatus,
+      matchedShipment.id,
+    ]
+  );
+
+console.log(
+  "Ekart webhook updated shipment status:",
+  {
+    shipmentId:
+      updatedShipmentResult.rows[0].id,
+    orderId:
+      updatedShipmentResult.rows[0].order_id,
+    shipmentStatus:
+      updatedShipmentResult.rows[0]
+        .shipment_status,
+  }
+);
+
 console.log(
   "Ekart webhook matched Lana shipment:",
   {
