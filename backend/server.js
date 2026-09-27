@@ -395,6 +395,101 @@ app.post(
 
       const rawText =
         rawBody.toString("utf8");
+      const webhookSecret =
+      process.env.EKART_WEBHOOK_SECRET;
+
+      if (!webhookSecret) {
+  console.error(
+    "Missing EKART_WEBHOOK_SECRET."
+  );
+
+  return res.status(500).json({
+    success: false,
+    message:
+      "Webhook secret is not configured.",
+  });
+}
+
+const receivedHmac =
+  req.headers["x-swift-webhook-hmac"];
+
+if (
+  !receivedHmac ||
+  typeof receivedHmac !== "string"
+) {
+  console.error(
+    "Missing Ekart webhook HMAC."
+  );
+
+  return res.status(401).json({
+    success: false,
+    message:
+      "Missing webhook signature.",
+  });
+}
+
+const normalizedHmac =
+  receivedHmac.trim().toLowerCase();
+
+if (
+  !/^[a-f0-9]{64}$/.test(
+    normalizedHmac
+  )
+) {
+  console.error(
+    "Invalid Ekart webhook HMAC format."
+  );
+
+  return res.status(401).json({
+    success: false,
+    message:
+      "Invalid webhook signature.",
+  });
+}
+
+const expectedHmac =
+  crypto
+    .createHmac(
+      "sha256",
+      webhookSecret
+    )
+    .update(rawBody)
+    .digest("hex");
+
+const receivedBuffer =
+  Buffer.from(
+    normalizedHmac,
+    "hex"
+  );
+
+const expectedBuffer =
+  Buffer.from(
+    expectedHmac,
+    "hex"
+  );
+
+if (
+  receivedBuffer.length !==
+    expectedBuffer.length ||
+  !crypto.timingSafeEqual(
+    receivedBuffer,
+    expectedBuffer
+  )
+) {
+  console.error(
+    "Invalid Ekart webhook HMAC."
+  );
+
+  return res.status(401).json({
+    success: false,
+    message:
+      "Invalid webhook signature.",
+  });
+}
+
+console.log(
+  "Ekart webhook HMAC verified."
+);
 
       let payload = null;
 
@@ -417,32 +512,6 @@ app.post(
       // SAFE HEADER LOGGING
       // -------------------------
 
-      const safeHeaders = {};
-
-      for (
-        const [key, value]
-        of Object.entries(req.headers)
-      ) {
-        const lowerKey =
-          key.toLowerCase();
-
-        if (
-          lowerKey ===
-            "authorization" ||
-          lowerKey ===
-            "cookie" ||
-          lowerKey ===
-            "set-cookie" ||
-          lowerKey ===
-            "x-api-key"
-        ) {
-          safeHeaders[key] =
-            "[REDACTED]";
-        } else {
-          safeHeaders[key] =
-            value;
-        }
-      }
 
       // -------------------------
       // LOG ONLY TRACKING FIELDS
@@ -461,10 +530,7 @@ app.post(
         new Date().toISOString()
       );
 
-      console.log(
-        "Headers:",
-        safeHeaders
-      );
+     
 
       console.log(
         "Tracking Payload:",
