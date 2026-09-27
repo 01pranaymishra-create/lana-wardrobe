@@ -620,6 +620,150 @@ console.log(
   }
 );
 
+// ========================================
+// SAFE LANA ORDER STATUS UPDATE
+// ========================================
+
+const mappedOrderStatus =
+  mapEkartTrackingToOrderStatus({
+    status: payload?.status,
+  });
+
+if (mappedOrderStatus) {
+  const orderResult =
+    await pool.query(
+      `
+      SELECT
+        id,
+        payment_method,
+        payment_status,
+        order_status,
+        courier_name,
+        tracking_number
+      FROM orders
+      WHERE id = $1
+      `,
+      [matchedShipment.order_id]
+    );
+
+  if (
+    orderResult.rows.length === 0
+  ) {
+    console.error(
+      "Ekart webhook order not found:",
+      matchedShipment.order_id
+    );
+  } else {
+    const order =
+      orderResult.rows[0];
+
+    const statusRank = {
+      order_placed: 1,
+      confirmed: 2,
+      packed: 3,
+      shipped: 4,
+      out_for_delivery: 5,
+      delivered: 6,
+    };
+
+    let shouldUpdateOrder = true;
+
+    // Never change a cancelled or already
+    // delivered Lana order automatically.
+    if (
+      order.order_status ===
+        "cancelled" ||
+      order.order_status ===
+        "delivered"
+    ) {
+      shouldUpdateOrder = false;
+    }
+
+    // Prevent duplicate/backward movement.
+    if (
+      statusRank[
+        order.order_status
+      ] &&
+      statusRank[
+        mappedOrderStatus
+      ] &&
+      statusRank[
+        mappedOrderStatus
+      ] <=
+        statusRank[
+          order.order_status
+        ]
+    ) {
+      shouldUpdateOrder = false;
+    }
+
+    // Shipping statuses require existing
+    // courier + tracking information.
+    if (
+      shouldUpdateOrder &&
+      (
+        !order.courier_name ||
+        !order.tracking_number
+      )
+    ) {
+      shouldUpdateOrder = false;
+
+      console.error(
+        `Ekart webhook could not update order #${order.id}: courier/tracking information is missing.`
+      );
+    }
+
+    if (shouldUpdateOrder) {
+      let paymentStatus =
+        order.payment_status;
+
+      // COD becomes paid only once
+      // Ekart confirms delivery.
+      if (
+        mappedOrderStatus ===
+          "delivered" &&
+        order.payment_method ===
+          "cod"
+      ) {
+        paymentStatus = "paid";
+      }
+
+      await pool.query(
+        `
+        UPDATE orders
+        SET
+          order_status = $1,
+          payment_status = $2,
+          updated_at =
+            CURRENT_TIMESTAMP
+        WHERE id = $3
+        `,
+        [
+          mappedOrderStatus,
+          paymentStatus,
+          order.id,
+        ]
+      );
+
+      console.log(
+        "Ekart webhook updated Lana order:",
+        {
+          orderId:
+            order.id,
+          orderStatus:
+            mappedOrderStatus,
+          paymentStatus,
+        }
+      );
+    }
+  }
+} else {
+  console.log(
+    "Ekart status does not change Lana order:",
+    payload?.status || null
+  );
+}
+
 console.log(
   "Ekart webhook matched Lana shipment:",
   {
