@@ -120,113 +120,207 @@ app.post(
       // PAYMENT CAPTURED
       // =========================
 
-      if (
-        event.event ===
-        "payment.captured"
-      ) {
-        const payment =
-          event.payload?.payment?.entity;
-
         if (
-          !payment?.id ||
-          !payment?.order_id
-        ) {
-          return res
-            .status(400)
-            .send(
-              "Invalid payment payload."
-            );
+  event.event ===
+  "payment.captured"
+) {
+  const payment =
+    event.payload?.payment?.entity;
+
+  if (
+    !payment?.id ||
+    !payment?.order_id
+  ) {
+    return res
+      .status(400)
+      .send(
+        "Invalid payment payload."
+      );
+  }
+
+  const client =
+    await pool.connect();
+
+  try {
+    await client.query("BEGIN");
+
+    // Lock the Lana order so the expiry worker
+    // and payment webhook cannot update it
+    // at the same time.
+    const orderResult =
+      await client.query(
+        `
+        SELECT
+          id,
+          total_amount,
+          payment_status,
+          order_status,
+          stock_restored
+        FROM orders
+        WHERE razorpay_order_id = $1
+        FOR UPDATE
+        `,
+        [payment.order_id]
+      );
+
+    if (
+      orderResult.rows.length === 0
+    ) {
+      await client.query(
+        "ROLLBACK"
+      );
+
+      console.error(
+        "Webhook order not found:",
+        payment.order_id
+      );
+
+      return res
+        .status(200)
+        .send("Order not found.");
+    }
+
+    const order =
+      orderResult.rows[0];
+
+    const expectedAmount =
+      Math.round(
+        Number(order.total_amount) *
+          100
+      );
+
+    // Validate amount BEFORE changing
+    // any Lana payment state.
+    if (
+      Number(payment.amount) !==
+      expectedAmount
+    ) {
+      await client.query(
+        "ROLLBACK"
+      );
+
+      console.error(
+        "Razorpay amount mismatch.",
+        {
+          orderId: order.id,
+          expectedAmount,
+          receivedAmount:
+            payment.amount,
         }
+      );
 
-        const orderResult =
-          await pool.query(
-            `
-            SELECT
-              id,
-              total_amount,
-              payment_status
-            FROM orders
-            WHERE razorpay_order_id = $1
-            `,
-            [payment.order_id]
-          );
+      return res
+        .status(400)
+        .send("Amount mismatch.");
+    }
 
-        if (
-          orderResult.rows.length === 0
-        ) {
-          console.error(
-            "Webhook order not found:",
-            payment.order_id
-          );
+    // Validate currency BEFORE changing
+    // any Lana payment state.
+    if (
+      payment.currency !== "INR"
+    ) {
+      await client.query(
+        "ROLLBACK"
+      );
 
-          return res
-            .status(200)
-            .send("Order not found.");
-        }
+      console.error(
+        "Unexpected Razorpay currency:",
+        payment.currency
+      );
 
-        const order =
-          orderResult.rows[0];
+      return res
+        .status(400)
+        .send("Currency mismatch.");
+    }
 
-        const expectedAmount =
-          Math.round(
-            Number(order.total_amount) *
-              100
-          );
+    // ========================================
+    // LATE PAYMENT FOR EXPIRED ORDER
+    // ========================================
 
-        if (
-          Number(payment.amount) !==
-          expectedAmount
-        ) {
-          console.error(
-            "Razorpay amount mismatch.",
-            {
-              orderId: order.id,
-              expectedAmount,
-              receivedAmount:
-                payment.amount,
-            }
-          );
+    if (
+      order.order_status ===
+        "cancelled" ||
+      order.stock_restored
+    ) {
+      await client.query(
+        `
+        UPDATE orders
+        SET
+          razorpay_payment_id = $1,
+          payment_status = 'paid',
+          updated_at =
+            CURRENT_TIMESTAMP
+        WHERE id = $2
+        `,
+        [
+          payment.id,
+          order.id,
+        ]
+      );
 
-          return res
-            .status(400)
-            .send("Amount mismatch.");
-        }
+      await client.query(
+        "COMMIT"
+      );
 
-        if (
-          payment.currency !== "INR"
-        ) {
-          console.error(
-            "Unexpected Razorpay currency:",
-            payment.currency
-          );
+      console.error(
+        `CRITICAL: Razorpay captured payment for expired order #${order.id}. Manual review required.`
+      );
 
-          return res
-            .status(400)
-            .send("Currency mismatch.");
-        }
-
-        await pool.query(
-          `
-          UPDATE orders
-          SET
-            razorpay_payment_id = $1,
-            payment_status = 'paid',
-            order_status = 'confirmed',
-            updated_at = CURRENT_TIMESTAMP
-          WHERE
-            razorpay_order_id = $2
-            AND payment_status <> 'paid'
-          `,
-          [
-            payment.id,
-            payment.order_id,
-          ]
+      return res
+        .status(200)
+        .send(
+          "Payment recorded for expired order; manual review required."
         );
+    }
 
-        console.log(
-          `Order ${order.id} confirmed by Razorpay webhook.`
-        );
-      }
+    // ========================================
+    // NORMAL SUCCESSFUL PAYMENT
+    // ========================================
+
+    await client.query(
+      `
+      UPDATE orders
+      SET
+        razorpay_payment_id = $1,
+        payment_status = 'paid',
+        order_status = 'confirmed',
+        updated_at =
+          CURRENT_TIMESTAMP
+      WHERE
+        id = $2
+        AND payment_status <> 'paid'
+        AND order_status <> 'cancelled'
+        AND stock_restored = FALSE
+      `,
+      [
+        payment.id,
+        order.id,
+      ]
+    );
+
+    await client.query(
+      "COMMIT"
+    );
+
+    console.log(
+      `Order ${order.id} confirmed by Razorpay webhook.`
+    );
+
+  } catch (error) {
+    try {
+      await client.query(
+        "ROLLBACK"
+      );
+    } catch {
+      // Ignore rollback error
+    }
+
+    throw error;
+
+  } finally {
+    client.release();
+  }
+}
 
       // =========================
       // PAYMENT FAILED
@@ -2585,6 +2679,258 @@ app.post(
   }
 );
 
+// ========================================
+// ABANDON UNPAID RAZORPAY ORDER
+// RESTORE RESERVED STOCK SAFELY
+// ========================================
+
+app.post(
+  "/api/payments/abandon-online-order",
+  authenticateUser,
+  async (req, res) => {
+    const client =
+      await pool.connect();
+
+    try {
+      const orderId =
+        Number(req.body?.orderId);
+
+      if (
+        !Number.isInteger(orderId) ||
+        orderId <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Invalid order ID.",
+        });
+      }
+
+      await client.query("BEGIN");
+
+      const orderResult =
+        await client.query(
+          `
+          SELECT
+            id,
+            user_id,
+            payment_method,
+            payment_status,
+            order_status,
+            stock_restored,
+            razorpay_order_id
+          FROM orders
+          WHERE id = $1
+          FOR UPDATE
+          `,
+          [orderId]
+        );
+
+      if (
+        orderResult.rows.length === 0
+      ) {
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(404).json({
+          success: false,
+          message:
+            "Order not found.",
+        });
+      }
+
+      const order =
+        orderResult.rows[0];
+
+      // Only the customer who created
+      // the order may abandon it.
+      if (
+        Number(order.user_id) !==
+        Number(req.user.userId)
+      ) {
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(403).json({
+          success: false,
+          message:
+            "You are not allowed to cancel this payment session.",
+        });
+      }
+
+      // Never use this endpoint for COD.
+      if (
+        order.payment_method !==
+        "online"
+      ) {
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(400).json({
+          success: false,
+          message:
+            "Only online payment sessions can be abandoned.",
+        });
+      }
+
+      // A successful payment must
+      // never be cancelled here.
+      if (
+        order.payment_status ===
+        "paid"
+      ) {
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "This order has already been paid.",
+        });
+      }
+
+      // Idempotent protection.
+      // If stock has already been restored,
+      // do not restore it again.
+      if (
+        order.order_status ===
+          "cancelled" ||
+        order.stock_restored
+      ) {
+        await client.query(
+          "COMMIT"
+        );
+
+        return res.json({
+          success: true,
+          message:
+            "Payment session is already cancelled.",
+        });
+      }
+
+      // Only untouched temporary
+      // online orders may be cancelled.
+      if (
+        order.order_status !==
+          "order_placed" ||
+        (
+          order.payment_status !==
+            "pending" &&
+          order.payment_status !==
+            "failed"
+        )
+      ) {
+        await client.query(
+          "ROLLBACK"
+        );
+
+        return res.status(409).json({
+          success: false,
+          message:
+            "This payment session cannot be cancelled automatically.",
+        });
+      }
+
+      // ========================================
+      // CHECK RAZORPAY BEFORE RESTORING STOCK
+      // ========================================
+
+      if (order.razorpay_order_id) {
+        const razorpayOrder =
+          await razorpay.orders.fetch(
+            order.razorpay_order_id
+          );
+
+        const razorpayStatus =
+          String(
+            razorpayOrder?.status || ""
+          ).toLowerCase();
+
+        // "created" means payment has not
+        // actually been attempted/completed.
+        //
+        // If Razorpay says attempted/paid,
+        // do NOT restore stock automatically.
+        if (
+          razorpayStatus &&
+          razorpayStatus !== "created"
+        ) {
+          await client.query(
+            "ROLLBACK"
+          );
+
+          return res.status(409).json({
+            success: false,
+            message:
+              "Payment activity was detected. The order was not cancelled automatically.",
+          });
+        }
+      }
+
+// ========================================
+// MARK PAYMENT SESSION AS ABANDONED
+// KEEP STOCK RESERVED TEMPORARILY
+// ========================================
+
+      await client.query(
+        `
+        UPDATE orders
+        SET
+          payment_status = 'failed',
+          updated_at =
+            CURRENT_TIMESTAMP
+        WHERE
+          id = $1
+          AND order_status = 'order_placed'
+          AND payment_status <> 'paid'
+        `,
+        [orderId]
+      );
+
+      await client.query(
+        "COMMIT"
+      );
+
+      console.log(
+    `Razorpay payment session abandoned for order #${orderId}.`
+      );
+
+      return res.json({
+        success: true,
+        message:
+            "Payment session closed safely.",
+      });
+
+    } catch (error) {
+      try {
+        await client.query(
+          "ROLLBACK"
+        );
+      } catch {
+        // Ignore rollback error
+      }
+
+      console.error(
+        "Abandon online order error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Unable to cancel the payment session.",
+      });
+
+    } finally {
+      client.release();
+    }
+  }
+);
+
 app.get(
   "/api/orders/my-orders",
   authenticateUser,
@@ -2613,7 +2959,12 @@ app.get(
           courier_name,
           created_at
         FROM orders
-        WHERE user_id = $1
+        WHERE
+          user_id = $1
+          AND (
+            payment_method = 'cod'
+            OR payment_status = 'paid'
+          )
         ORDER BY created_at DESC
         `,
         [req.user.userId]
@@ -3972,7 +4323,10 @@ app.get(
           o.razorpay_payment_id,
           o.created_at,
           o.updated_at
-        FROM orders o
+       FROM orders o
+        WHERE
+          o.payment_method = 'cod'
+          OR o.payment_status = 'paid'
         ORDER BY o.created_at DESC
       `);
 
@@ -7368,16 +7722,17 @@ async function expirePendingOnlineOrders() {
       await client.query(
         `
         SELECT
-          id
+          id,
+          razorpay_order_id
         FROM orders
         WHERE
           payment_method = 'online'
-          AND payment_status = 'pending'
+          AND payment_status IN ('pending', 'failed')
           AND order_status = 'order_placed'
           AND stock_restored = FALSE
-          AND created_at <
-              CURRENT_TIMESTAMP
-              - INTERVAL '15 minutes'
+          AND updated_at <
+    CURRENT_TIMESTAMP
+    - INTERVAL '15 minutes'
         FOR UPDATE SKIP LOCKED
         `
       );
@@ -7386,6 +7741,114 @@ async function expirePendingOnlineOrders() {
       const order
       of expiredOrdersResult.rows
     ) {
+            // ========================================
+      // VERIFY RAZORPAY BEFORE EXPIRING ORDER
+      // ========================================
+
+      let safeToExpire = true;
+
+      if (order.razorpay_order_id) {
+        try {
+          const razorpayOrder =
+            await razorpay.orders.fetch(
+              order.razorpay_order_id
+            );
+
+          const razorpayOrderStatus =
+            String(
+              razorpayOrder?.status || ""
+            ).toLowerCase();
+
+          // Razorpay already considers
+          // the order fully paid.
+          if (
+            razorpayOrderStatus === "paid"
+          ) {
+            safeToExpire = false;
+          }
+
+          // At least one payment attempt
+          // has happened. Inspect payments.
+          else if (
+            razorpayOrderStatus ===
+            "attempted"
+          ) {
+            const payments =
+              await razorpay.orders
+                .fetchPayments(
+                  order.razorpay_order_id
+                );
+
+            const paymentItems =
+              Array.isArray(
+                payments?.items
+              )
+                ? payments.items
+                : [];
+
+            // Unexpected/uncertain state:
+            // keep the stock reserved.
+            if (
+              paymentItems.length === 0
+            ) {
+              safeToExpire = false;
+            } else {
+              const hasNonFailedPayment =
+                paymentItems.some(
+                  (payment) => {
+                    const status =
+                      String(
+                        payment?.status ||
+                          ""
+                      ).toLowerCase();
+
+                    return (
+                      status !== "failed"
+                    );
+                  }
+                );
+
+              // captured, authorized,
+              // created, or any unknown
+              // non-failed payment means
+              // we must not restore stock.
+              if (hasNonFailedPayment) {
+                safeToExpire = false;
+              }
+            }
+          }
+
+          // "created" is safe after our
+          // 15-minute timeout because no
+          // payment attempt was recorded.
+          else if (
+            razorpayOrderStatus !==
+            "created"
+          ) {
+            // Unknown Razorpay status:
+            // fail safely and preserve stock.
+            safeToExpire = false;
+          }
+
+        } catch (error) {
+          console.error(
+            `Could not verify Razorpay status before expiring order #${order.id}:`,
+            error
+          );
+
+          // If Razorpay cannot be checked,
+          // do not risk restoring stock.
+          safeToExpire = false;
+        }
+      }
+
+      if (!safeToExpire) {
+        console.log(
+          `Skipped expiry for order #${order.id} because Razorpay payment activity may exist.`
+        );
+
+        continue;
+      }
       const itemsResult =
         await client.query(
           `
@@ -7429,7 +7892,7 @@ async function expirePendingOnlineOrders() {
             CURRENT_TIMESTAMP
         WHERE
           id = $1
-          AND payment_status = 'pending'
+          AND payment_status IN ('pending', 'failed')
           AND order_status = 'order_placed'
           AND stock_restored = FALSE
         `,
@@ -7483,4 +7946,3 @@ app.listen(PORT, () => {
     `Server is running on http://localhost:${PORT}`
   );
 });
-

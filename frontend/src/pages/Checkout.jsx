@@ -245,6 +245,7 @@ const handleSubmit = async (e) => {
     // OPEN RAZORPAY
     // =========================
 
+    let paymentStartedSuccessfully = false;
     const options = {
       key:
         razorpayData.keyId,
@@ -282,10 +283,64 @@ const handleSubmit = async (e) => {
       },
 
       theme: {},
+      
+      modal: {
+  ondismiss: async () => {
+    if (paymentStartedSuccessfully) {
+      return;
+    }
+
+    try {
+      const abandonResponse =
+        await fetch(
+          "https://api.lanawardrobe.in/api/payments/abandon-online-order",
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body: JSON.stringify({
+              orderId:
+                lanaOrder.id,
+            }),
+          }
+        );
+
+      const abandonData =
+        await abandonResponse.json();
+
+      if (!abandonResponse.ok) {
+        console.warn(
+          "Could not immediately cancel abandoned payment:",
+          abandonData.message
+        );
+
+        return;
+      }
+
+      console.log(
+        "Abandoned Razorpay payment session cleaned up successfully."
+      );
+
+    } catch (error) {
+      console.error(
+        "Abandoned payment cleanup error:",
+        error
+      );
+    }
+  },
+},
 
       handler: async (
         paymentResponse
-      ) => {
+      ) => { 
+        paymentStartedSuccessfully = true;
         try {
           const verifyResponse =
             await fetch(
