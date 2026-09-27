@@ -277,6 +277,163 @@ app.post(
   }
 );
 
+
+// =========================
+// EKART DEBUG WEBHOOK
+// TEMPORARY - NO DATABASE UPDATES
+// MUST BE BEFORE express.json()
+// =========================
+
+app.post(
+  "/api/webhooks/ekart-debug",
+  express.raw({
+    type: "application/json",
+    limit: "100kb",
+  }),
+  async (req, res) => {
+    try {
+      const rawBody =
+        Buffer.isBuffer(req.body)
+          ? req.body
+          : Buffer.from(
+              req.body || ""
+            );
+
+      const rawText =
+        rawBody.toString("utf8");
+
+      let payload = null;
+
+      try {
+        payload =
+          JSON.parse(rawText);
+      } catch {
+        console.error(
+          "Ekart debug webhook received invalid JSON."
+        );
+
+        return res.status(200).json({
+          success: true,
+          message:
+            "Ekart debug webhook received.",
+        });
+      }
+
+      // -------------------------
+      // SAFE HEADER LOGGING
+      // -------------------------
+
+      const safeHeaders = {};
+
+      for (
+        const [key, value]
+        of Object.entries(req.headers)
+      ) {
+        const lowerKey =
+          key.toLowerCase();
+
+        if (
+          lowerKey ===
+            "authorization" ||
+          lowerKey ===
+            "cookie" ||
+          lowerKey ===
+            "set-cookie" ||
+          lowerKey ===
+            "x-api-key"
+        ) {
+          safeHeaders[key] =
+            "[REDACTED]";
+        } else {
+          safeHeaders[key] =
+            value;
+        }
+      }
+
+      // -------------------------
+      // LOG ONLY TRACKING FIELDS
+      // -------------------------
+
+      console.log(
+        "========================================"
+      );
+
+      console.log(
+        "EKART DEBUG WEBHOOK RECEIVED"
+      );
+
+      console.log(
+        "Received At:",
+        new Date().toISOString()
+      );
+
+      console.log(
+        "Headers:",
+        safeHeaders
+      );
+
+      console.log(
+        "Tracking Payload:",
+        {
+          id:
+            payload?.id || null,
+
+          wbn:
+            payload?.wbn || null,
+
+          status:
+            payload?.status || null,
+
+          orderNumber:
+            payload?.orderNumber ||
+            null,
+
+          ctime:
+            payload?.ctime || null,
+
+          description:
+            payload?.desc || null,
+
+          location:
+            payload?.location || null,
+
+          attempts:
+            payload?.attempts ?? null,
+
+          pickupTime:
+            payload?.pickupTime ||
+            null,
+
+          edd:
+            payload?.edd || null,
+        }
+      );
+
+      console.log(
+        "========================================"
+      );
+
+      return res.status(200).json({
+        success: true,
+        message:
+          "Ekart debug webhook received successfully.",
+      });
+
+    } catch (error) {
+      console.error(
+        "Ekart debug webhook error:",
+        error
+      );
+
+      return res.status(200).json({
+        success: false,
+        message:
+          "Ekart debug webhook received with an internal logging error.",
+      });
+    }
+  }
+);
+
 // Normal JSON parser AFTER webhook
 app.use(express.json());
 
