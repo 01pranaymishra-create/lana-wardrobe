@@ -119,10 +119,40 @@ function AdminRequests() {
     );
   };
 
+  const formatSizes = (sizes) => {
+    if (!sizes) return "-";
+
+    if (
+      typeof sizes !== "object" ||
+      Array.isArray(sizes)
+    ) {
+      return String(sizes);
+    }
+
+    const entries =
+      Object.entries(sizes).filter(
+        ([, quantity]) =>
+          Number(quantity) > 0
+      );
+
+    if (entries.length === 0) {
+      return "-";
+    }
+
+    return entries
+      .map(
+        ([size, quantity]) =>
+          `${size}: ${quantity}`
+      )
+      .join(", ");
+  };
+
   if (loading) {
     return (
       <main className="admin-page">
-        <p>Loading customer requests...</p>
+        <div className="admin-request-state">
+          Loading customer requests...
+        </div>
       </main>
     );
   }
@@ -130,7 +160,9 @@ function AdminRequests() {
   if (error) {
     return (
       <main className="admin-page">
-        <p>{error}</p>
+        <div className="admin-request-state error">
+          {error}
+        </div>
       </main>
     );
   }
@@ -143,301 +175,546 @@ function AdminRequests() {
         <h1>Customer Requests</h1>
 
         <p>
-          Manage bulk orders, customization
-          requests and contact messages.
+          Manage bulk orders,
+          customization requests and
+          contact messages.
         </p>
       </section>
 
-      <section
-        style={{
-          display: "flex",
-          gap: "10px",
-          flexWrap: "wrap",
-          marginBottom: "30px",
-        }}
-      >
+      <section className="request-tabs">
         <button
           type="button"
+          className={
+            activeTab === "bulk"
+              ? "request-tab active"
+              : "request-tab"
+          }
           onClick={() =>
             setActiveTab("bulk")
           }
         >
-          Bulk Orders ({bulkRequests.length})
+          Bulk Orders
+          <span>{bulkRequests.length}</span>
         </button>
 
         <button
           type="button"
+          className={
+            activeTab === "customization"
+              ? "request-tab active"
+              : "request-tab"
+          }
           onClick={() =>
-            setActiveTab("customization")
+            setActiveTab(
+              "customization"
+            )
           }
         >
-          Customization (
-          {customizationRequests.length})
+          Customization
+          <span>
+            {customizationRequests.length}
+          </span>
         </button>
 
         <button
           type="button"
+          className={
+            activeTab === "contact"
+              ? "request-tab active"
+              : "request-tab"
+          }
           onClick={() =>
             setActiveTab("contact")
           }
         >
-          Contact Messages (
-          {contactMessages.length})
+          Contact Messages
+          <span>
+            {contactMessages.length}
+          </span>
         </button>
       </section>
 
       {activeTab === "bulk" && (
-        <section>
-          <h2>Bulk Order Requests</h2>
+        <section className="requests-section">
+          <div className="requests-section-heading">
+            <div>
+              <p>BULK ORDERS</p>
+              <h2>
+                Bulk Order Requests
+              </h2>
+            </div>
+
+            <span>
+              {bulkRequests.length}{" "}
+              requests
+            </span>
+          </div>
 
           {bulkRequests.length === 0 ? (
-            <p>No bulk order requests.</p>
+            <div className="admin-request-state">
+              No bulk order requests.
+            </div>
           ) : (
-            bulkRequests.map((request) => (
-              <div
-                key={request.id}
-                style={{
-                  border:
-                    "1px solid #ddd",
-                  padding: "20px",
-                  marginBottom: "20px",
-                  borderRadius: "8px",
-                }}
-              >
-                <h3>
-                  Request #{request.id}
-                </h3>
+            <div className="request-card-list">
+              {bulkRequests.map(
+                (request) => (
+                  <article
+                    key={request.id}
+                    className="request-card"
+                  >
+                    <div className="request-card-header">
+                      <div>
+                        <span className="request-label">
+                          BULK REQUEST
+                        </span>
 
-                <p>
-                  <strong>
-                    Organization:
-                  </strong>{" "}
-                  {request.organization_name}
-                </p>
+                        <h3>
+                          Request #
+                          {request.id}
+                        </h3>
+                      </div>
 
-                <p>
-                  <strong>
-                    Contact Person:
-                  </strong>{" "}
-                  {request.contact_person}
-                </p>
+                      <span className="request-status">
+                        {request.status ||
+                          "new"}
+                      </span>
+                    </div>
 
-                <p>
-                  <strong>Phone:</strong>{" "}
-                  {request.phone}
-                </p>
+                    <div className="request-details-grid">
+                      <div>
+                        <span>
+                          Organization
+                        </span>
+                        <strong>
+                          {
+                            request.organization_name
+                          }
+                        </strong>
+                      </div>
 
-                <p>
-                  <strong>Email:</strong>{" "}
-                  {request.email || "-"}
-                </p>
+                      <div>
+                        <span>
+                          Contact Person
+                        </span>
+                        <strong>
+                          {
+                            request.contact_person
+                          }
+                        </strong>
+                      </div>
 
-                <p>
-                  <strong>
-                    T-shirt Type:
-                  </strong>{" "}
-                  {request.tshirt_type}
-                </p>
+                      <div>
+                        <span>Phone</span>
+                        <strong>
+                          {request.phone}
+                        </strong>
+                      </div>
 
-                <p>
-                  <strong>
-                    Total Quantity:
-                  </strong>{" "}
-                  {request.total_quantity}
-                </p>
+                      <div>
+                        <span>Email</span>
+                        <strong>
+                          {request.email ||
+                            "-"}
+                        </strong>
+                      </div>
 
-                <p>
-                  <strong>Status:</strong>{" "}
-                  {request.status || "new"}
-                </p>
+                      <div>
+                        <span>
+                          T-shirt Type
+                        </span>
+                        <strong>
+                          {
+                            request.tshirt_type
+                          }
+                        </strong>
+                      </div>
 
-                <p>
-                  <strong>Created:</strong>{" "}
-                  {formatDate(
-                    request.created_at
-                  )}
-                </p>
+                      <div>
+                        <span>Fabric</span>
+                        <strong>
+                          {request.fabric ||
+                            "-"}
+                        </strong>
+                      </div>
 
-                {request.design_file_path && (
-                  <p>
-                    <a
-                      href={`https://api.lanawardrobe.in${request.design_file_path}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Open Design File
-                    </a>
-                  </p>
-                )}
-              </div>
-            ))
+                      <div>
+                        <span>Color</span>
+                        <strong>
+                          {request.color_name ||
+                            request.color_hex ||
+                            "-"}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Total Quantity
+                        </span>
+                        <strong>
+                          {
+                            request.total_quantity
+                          }
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Size Quantities
+                        </span>
+                        <strong>
+                          {formatSizes(
+                            request.size_quantities
+                          )}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Print Position
+                        </span>
+                        <strong>
+                          {
+                            request.print_position
+                          }
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Required Date
+                        </span>
+                        <strong>
+                          {request.required_date
+                            ? new Date(
+                                request.required_date
+                              ).toLocaleDateString(
+                                "en-IN"
+                              )
+                            : "-"}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Delivery City
+                        </span>
+                        <strong>
+                          {request.delivery_city ||
+                            "-"}
+                        </strong>
+                      </div>
+                    </div>
+
+                    {request.notes && (
+                      <div className="request-message-box">
+                        <span>Notes</span>
+                        <p>
+                          {request.notes}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="request-card-footer">
+                      <span>
+                        Submitted{" "}
+                        {formatDate(
+                          request.created_at
+                        )}
+                      </span>
+
+                      {request.design_file_path && (
+                        <a
+                          href={`https://api.lanawardrobe.in${request.design_file_path}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="request-file-button"
+                        >
+                          Open Design File
+                        </a>
+                      )}
+                    </div>
+                  </article>
+                )
+              )}
+            </div>
           )}
         </section>
       )}
 
-      {activeTab === "customization" && (
-        <section>
-          <h2>
-            Customization Requests
-          </h2>
+      {activeTab ===
+        "customization" && (
+        <section className="requests-section">
+          <div className="requests-section-heading">
+            <div>
+              <p>CUSTOMIZATION</p>
+              <h2>
+                Customization Requests
+              </h2>
+            </div>
+
+            <span>
+              {
+                customizationRequests.length
+              }{" "}
+              requests
+            </span>
+          </div>
 
           {customizationRequests.length ===
           0 ? (
-            <p>
+            <div className="admin-request-state">
               No customization requests.
-            </p>
+            </div>
           ) : (
-            customizationRequests.map(
-              (request) => (
-                <div
-                  key={request.id}
-                  style={{
-                    border:
-                      "1px solid #ddd",
-                    padding: "20px",
-                    marginBottom: "20px",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <h3>
-                    Request #{request.id}
-                  </h3>
+            <div className="request-card-list">
+              {customizationRequests.map(
+                (request) => (
+                  <article
+                    key={request.id}
+                    className="request-card"
+                  >
+                    <div className="request-card-header">
+                      <div>
+                        <span className="request-label">
+                          CUSTOM REQUEST
+                        </span>
 
-                  <p>
-                    <strong>
-                      Customer:
-                    </strong>{" "}
-                    {request.customer_name}
-                  </p>
+                        <h3>
+                          Request #
+                          {request.id}
+                        </h3>
+                      </div>
 
-                  <p>
-                    <strong>Phone:</strong>{" "}
-                    {request.phone}
-                  </p>
+                      <span className="request-status">
+                        {request.status ||
+                          "new"}
+                      </span>
+                    </div>
 
-                  <p>
-                    <strong>Email:</strong>{" "}
-                    {request.email || "-"}
-                  </p>
+                    <div className="request-details-grid">
+                      <div>
+                        <span>Customer</span>
+                        <strong>
+                          {
+                            request.customer_name
+                          }
+                        </strong>
+                      </div>
 
-                  <p>
-                    <strong>
-                      T-shirt Type:
-                    </strong>{" "}
-                    {request.tshirt_type}
-                  </p>
+                      <div>
+                        <span>Phone</span>
+                        <strong>
+                          {request.phone}
+                        </strong>
+                      </div>
 
-                  <p>
-                    <strong>
-                      Total Quantity:
-                    </strong>{" "}
-                    {request.total_quantity}
-                  </p>
+                      <div>
+                        <span>Email</span>
+                        <strong>
+                          {request.email ||
+                            "-"}
+                        </strong>
+                      </div>
 
-                  <p>
-                    <strong>
-                      Print Position:
-                    </strong>{" "}
-                    {request.print_position}
-                  </p>
+                      <div>
+                        <span>
+                          T-shirt Type
+                        </span>
+                        <strong>
+                          {
+                            request.tshirt_type
+                          }
+                        </strong>
+                      </div>
 
-                  <p>
-                    <strong>Status:</strong>{" "}
-                    {request.status || "new"}
-                  </p>
+                      <div>
+                        <span>Color</span>
+                        <strong>
+                          {request.color_name ||
+                            request.color_hex ||
+                            "-"}
+                        </strong>
+                      </div>
 
-                  <p>
-                    <strong>Created:</strong>{" "}
-                    {formatDate(
-                      request.created_at
+                      <div>
+                        <span>
+                          Total Quantity
+                        </span>
+                        <strong>
+                          {
+                            request.total_quantity
+                          }
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Size Quantities
+                        </span>
+                        <strong>
+                          {formatSizes(
+                            request.size_quantities
+                          )}
+                        </strong>
+                      </div>
+
+                      <div>
+                        <span>
+                          Print Position
+                        </span>
+                        <strong>
+                          {
+                            request.print_position
+                          }
+                        </strong>
+                      </div>
+                    </div>
+
+                    {request.notes && (
+                      <div className="request-message-box">
+                        <span>Notes</span>
+                        <p>
+                          {request.notes}
+                        </p>
+                      </div>
                     )}
-                  </p>
 
-                  {request.design_file_path && (
-                    <p>
-                      <a
-                        href={`https://api.lanawardrobe.in${request.design_file_path}`}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Open Design File
-                      </a>
-                    </p>
-                  )}
-                </div>
-              )
-            )
+                    <div className="request-card-footer">
+                      <span>
+                        Submitted{" "}
+                        {formatDate(
+                          request.created_at
+                        )}
+                      </span>
+
+                      {request.design_file_path && (
+                        <a
+                          href={`https://api.lanawardrobe.in${request.design_file_path}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="request-file-button"
+                        >
+                          Open Design File
+                        </a>
+                      )}
+                    </div>
+                  </article>
+                )
+              )}
+            </div>
           )}
         </section>
       )}
 
       {activeTab === "contact" && (
-        <section>
-          <h2>Contact Messages</h2>
+        <section className="requests-section">
+          <div className="requests-section-heading">
+            <div>
+              <p>MESSAGES</p>
+              <h2>
+                Contact Messages
+              </h2>
+            </div>
+
+            <span>
+              {contactMessages.length}{" "}
+              messages
+            </span>
+          </div>
 
           {contactMessages.length === 0 ? (
-            <p>No contact messages.</p>
+            <div className="admin-request-state">
+              No contact messages.
+            </div>
           ) : (
-            contactMessages.map(
-              (message) => (
-                <div
-                  key={message.id}
-                  style={{
-                    border:
-                      "1px solid #ddd",
-                    padding: "20px",
-                    marginBottom: "20px",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <h3>
-                    Message #{message.id}
-                  </h3>
+            <div className="request-card-list">
+              {contactMessages.map(
+                (message) => (
+                  <article
+                    key={message.id}
+                    className="request-card"
+                  >
+                    <div className="request-card-header">
+                      <div>
+                        <span className="request-label">
+                          CONTACT MESSAGE
+                        </span>
 
-                  <p>
-                    <strong>Name:</strong>{" "}
-                    {message.customer_name}
-                  </p>
+                        <h3>
+                          Message #
+                          {message.id}
+                        </h3>
+                      </div>
 
-                  <p>
-                    <strong>Phone:</strong>{" "}
-                    {message.phone || "-"}
-                  </p>
+                      <span className="request-status">
+                        {message.status ||
+                          "new"}
+                      </span>
+                    </div>
 
-                  <p>
-                    <strong>Email:</strong>{" "}
-                    {message.email}
-                  </p>
+                    <div className="request-details-grid">
+                      <div>
+                        <span>Name</span>
+                        <strong>
+                          {
+                            message.customer_name
+                          }
+                        </strong>
+                      </div>
 
-                  <p>
-                    <strong>Subject:</strong>{" "}
-                    {message.subject || "-"}
-                  </p>
+                      <div>
+                        <span>Phone</span>
+                        <strong>
+                          {message.phone ||
+                            "-"}
+                        </strong>
+                      </div>
 
-                  <p>
-                    <strong>Category:</strong>{" "}
-                    {message.category || "-"}
-                  </p>
+                      <div>
+                        <span>Email</span>
+                        <strong>
+                          {message.email}
+                        </strong>
+                      </div>
 
-                  <p>
-                    <strong>Message:</strong>{" "}
-                    {message.message}
-                  </p>
+                      <div>
+                        <span>
+                          Category
+                        </span>
+                        <strong>
+                          {message.category ||
+                            "-"}
+                        </strong>
+                      </div>
 
-                  <p>
-                    <strong>Status:</strong>{" "}
-                    {message.status || "new"}
-                  </p>
+                      <div className="request-grid-full">
+                        <span>Subject</span>
+                        <strong>
+                          {message.subject ||
+                            "-"}
+                        </strong>
+                      </div>
+                    </div>
 
-                  <p>
-                    <strong>Created:</strong>{" "}
-                    {formatDate(
-                      message.created_at
-                    )}
-                  </p>
-                </div>
-              )
-            )
+                    <div className="request-message-box">
+                      <span>Message</span>
+                      <p>
+                        {message.message}
+                      </p>
+                    </div>
+
+                    <div className="request-card-footer">
+                      <span>
+                        Submitted{" "}
+                        {formatDate(
+                          message.created_at
+                        )}
+                      </span>
+                    </div>
+                  </article>
+                )
+              )}
+            </div>
           )}
         </section>
       )}
