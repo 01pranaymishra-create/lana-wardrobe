@@ -379,7 +379,10 @@ app.post(
 // =========================
 
 app.post(
-  "/api/webhooks/ekart-debug",
+  [
+    "/api/webhooks/ekart-debug",
+    "/api/webhooks/ekart",
+  ],
   express.raw({
     type: "application/json",
     limit: "100kb",
@@ -6842,77 +6845,7 @@ app.post(
   }
 );
 
-// ========================================
-// TEMPORARY EKART WEBHOOK STATUS TEST
-// DRY RUN - NO DATABASE UPDATES
-// ========================================
 
-app.post(
-  "/api/admin/ekart/test-status-mapping",
-  authenticateUser,
-  requireAdmin,
-  async (req, res) => {
-    try {
-      const {
-        status,
-      } = req.body;
-
-      if (
-        !status ||
-        typeof status !== "string"
-      ) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Ekart status is required.",
-        });
-      }
-
-      const normalizedShipmentStatus =
-        normalizeEkartStatus(
-          status
-        );
-
-      const mappedOrderStatus =
-        mapEkartTrackingToOrderStatus({
-          status,
-        });
-
-      return res.json({
-        success: true,
-
-        inputEkartStatus:
-          status,
-
-        normalizedShipmentStatus,
-
-        mappedOrderStatus,
-
-        orderWouldChange:
-          Boolean(
-            mappedOrderStatus
-          ),
-
-        message:
-          mappedOrderStatus
-            ? `Lana order would move to ${mappedOrderStatus}.`
-            : "Lana order would remain unchanged.",
-      });
-
-    } catch (error) {
-      console.error(
-        "Ekart status mapping test error:",
-        error
-      );
-
-      return res.status(500).json({
-        success: false,
-        message:
-          "Failed to test Ekart status mapping.",
-      });
-    }
-  }
-);
 
 // ========================================
 // GET LIVE EKART TRACKING STATUS
