@@ -166,15 +166,119 @@ function AdminRequests() {
     "completed",
     "closed",
   ];
-
-  const formatStatus = (status) => {
+const formatStatus = (status) => {
     if (!status) return "New";
 
     return (
-      status.charAt(0).toUpperCase() +
-      status.slice(1)
+    status.charAt(0).toUpperCase() +
+    status.slice(1)
+  );
+};
+
+ const getDesignOpenUrl = (
+  designFilePath
+) => {
+  if (!designFilePath) {
+    return "";
+  }
+
+  if (
+    /^https?:\/\//i.test(
+      designFilePath
+    )
+  ) {
+    return designFilePath;
+  }
+
+  return `https://api.lanawardrobe.in${
+    designFilePath.startsWith("/")
+      ? ""
+      : "/"
+  }${designFilePath}`;
+};
+
+const downloadDesign = async (
+  type,
+  id,
+  fileName
+) => {
+  try {
+    setStatusError("");
+
+    const token =
+      localStorage.getItem(
+        "lana_token"
+      );
+
+    if (!token) {
+      throw new Error(
+        "Admin login is required."
+      );
+    }
+
+    const response = await fetch(
+      `https://api.lanawardrobe.in/api/admin/request-design/${type}/${id}/download`,
+      {
+        headers: {
+          Authorization:
+            `Bearer ${token}`,
+        },
+      }
     );
-  };
+
+    if (!response.ok) {
+      let message =
+        "Failed to download design file.";
+
+      try {
+        const data =
+          await response.json();
+
+        message =
+          data.message || message;
+      } catch {
+        // Response was not JSON.
+      }
+
+      throw new Error(message);
+    }
+
+    const blob =
+      await response.blob();
+
+    const downloadUrl =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
+
+    link.href = downloadUrl;
+
+    link.download =
+      fileName ||
+      `design-${id}`;
+
+    document.body.appendChild(link);
+
+    link.click();
+
+    link.remove();
+
+    URL.revokeObjectURL(
+      downloadUrl
+    );
+  } catch (err) {
+    console.error(
+      "Design download error:",
+      err
+    );
+
+    setStatusError(
+      err.message ||
+        "Failed to download design file."
+    );
+  }
+};
 
   const updateRequestStatus = async (
     type,
@@ -738,16 +842,34 @@ function AdminRequests() {
                         )}
                       </span>
 
-                      {request.design_file_path && (
-                        <a
-                          href={`https://api.lanawardrobe.in${request.design_file_path}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="request-file-button"
-                        >
-                          Open Design File
-                        </a>
-                      )}
+                        {request.design_file_path && (
+  <div className="request-file-actions">
+    <a
+      href={getDesignOpenUrl(
+        request.design_file_path
+      )}
+      target="_blank"
+      rel="noreferrer"
+      className="request-file-button"
+    >
+      Open Design File
+    </a>
+
+    <button
+      type="button"
+      className="request-file-button"
+      onClick={() =>
+        downloadDesign(
+          "bulk",
+          request.id,
+          request.design_file_name
+        )
+      }
+    >
+      Download Design
+    </button>
+  </div>
+)}
                     </div>
                   </article>
                 )
@@ -970,14 +1092,32 @@ function AdminRequests() {
                       </span>
 
                       {request.design_file_path && (
-                        <a
-                          href={`https://api.lanawardrobe.in${request.design_file_path}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="request-file-button"
-                        >
-                          Open Design File
-                        </a>
+                        <div className="request-file-actions">
+                          <a
+                            href={getDesignOpenUrl(
+                              request.design_file_path
+                            )}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="request-file-button"
+                          >
+                            Open Design File
+                          </a>
+
+                          <button
+                            type="button"
+                            className="request-file-button"
+                            onClick={() =>
+                              downloadDesign(
+                                "customization",
+                                request.id,
+                                request.design_file_name
+                              )
+                            }
+                          >
+                            Download Design
+                          </button>
+                        </div>
                       )}
                     </div>
                   </article>
