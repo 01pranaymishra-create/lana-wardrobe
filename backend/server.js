@@ -379,10 +379,7 @@ app.post(
 // =========================
 
 app.post(
-  [
-    "/api/webhooks/ekart-debug",
-    "/api/webhooks/ekart",
-  ],
+  "/api/webhooks/ekart",
   express.raw({
     type: "application/json",
     limit: "100kb",
