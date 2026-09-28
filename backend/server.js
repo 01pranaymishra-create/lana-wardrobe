@@ -1426,6 +1426,117 @@ app.post(
     }
   }
 );
+
+// ========================================
+// ADMIN - GET BULK ORDER REQUESTS
+// ========================================
+
+app.get(
+  "/api/admin/bulk-order-requests",
+  authenticateUser,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `
+        SELECT *
+        FROM bulk_order_requests
+        ORDER BY created_at DESC, id DESC
+        `
+      );
+
+      return res.json({
+        success: true,
+        requests: result.rows,
+      });
+    } catch (error) {
+      console.error(
+        "Admin bulk order requests fetch error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to load bulk order requests.",
+      });
+    }
+  }
+);
+
+// ========================================
+// ADMIN - GET CUSTOMIZATION REQUESTS
+// ========================================
+
+app.get(
+  "/api/admin/customization-requests",
+  authenticateUser,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `
+        SELECT *
+        FROM customization_requests
+        ORDER BY created_at DESC, id DESC
+        `
+      );
+
+      return res.json({
+        success: true,
+        requests: result.rows,
+      });
+    } catch (error) {
+      console.error(
+        "Admin customization requests fetch error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to load customization requests.",
+      });
+    }
+  }
+);
+
+// ========================================
+// ADMIN - GET CONTACT MESSAGES
+// ========================================
+
+app.get(
+  "/api/admin/contact-messages",
+  authenticateUser,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const result = await pool.query(
+        `
+        SELECT *
+        FROM contact_messages
+        ORDER BY created_at DESC, id DESC
+        `
+      );
+
+      return res.json({
+        success: true,
+        messages: result.rows,
+      });
+    } catch (error) {
+      console.error(
+        "Admin contact messages fetch error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to load contact messages.",
+      });
+    }
+  }
+);
 // =========================
 // OTP HELPER
 // =========================
