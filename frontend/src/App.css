@@ -8101,3 +8101,24 @@ select.request-status:disabled {
     gap: 12px;
   }
 }
+
+.request-file-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.request-file-actions .request-file-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 16px;
+  margin: 0;
+  line-height: 1;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  font: inherit;
+}
