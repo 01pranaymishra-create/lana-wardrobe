@@ -35,6 +35,7 @@ import AdminShipping from "./pages/AdminShipping";
 import AdminReviews from "./pages/AdminReviews";
 import AdminCustomers from "./pages/AdminCustomers";
 import ScrollToTop from "./components/ScrollToTop";
+import AdminRequests from "./pages/AdminRequests";
 import "./App.css";
 
 function App() {
@@ -75,6 +76,7 @@ function App() {
         <Route path="/admin/shipping" element={ <AdminRoute> <AdminShipping /></AdminRoute>}/>
         <Route path="/admin/reviews" element={<AdminRoute> <AdminReviews /></AdminRoute>}/>
         <Route path="/admin/customers" element={<AdminRoute> <AdminCustomers /> </AdminRoute>}/>
+        <Route path="/admin/requests" element={<AdminRoute> <AdminRequests /> </AdminRoute> } />
       </Routes>
 
       <Footer />

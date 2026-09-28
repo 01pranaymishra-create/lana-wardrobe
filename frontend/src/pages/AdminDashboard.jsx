@@ -154,7 +154,14 @@ function AdminDashboard() {
           >
             Manage Products
           </button>
-
+          <button
+            type="button"
+            onClick={() =>
+              navigate("/admin/requests")
+            }
+          >
+            Customer Requests
+          </button>
           <button
             type="button"
           >
