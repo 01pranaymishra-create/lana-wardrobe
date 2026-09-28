@@ -902,12 +902,6 @@ app.use((req, res, next) => {
 // DESIGN FILE UPLOAD SETUP && PRODUCT IMAGE UPLOAD SETUP  
 // =========================
 
-const designUploadDirectory = path.join(
-  __dirname,
-  "Uploads",
-  "designs"
-);
-
 const productImageStorage = multer.memoryStorage();
 const productImageFilter = (req, file, cb) => {
   const allowedTypes = [
@@ -960,29 +954,7 @@ const uploadProductImage = multer({
   },
 });
 
-if (!fs.existsSync(designUploadDirectory)) {
-  fs.mkdirSync(designUploadDirectory, {
-    recursive: true,
-  });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, designUploadDirectory);
-  },
-
-  filename: (req, file, cb) => {
-    const uniqueName =
-      Date.now() +
-      "-" +
-      Math.round(Math.random() * 1e9) +
-      path.extname(file.originalname);
-
-    cb(null, uniqueName);
-  },
-});
-
-const fileFilter = (req, file, cb) => {
+const designFileFilter = (req, file, cb) => {
   const allowedTypes = [
     "image/png",
     "image/jpeg",
@@ -1001,14 +973,43 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
+const designStorage =
+  multer.memoryStorage();
+
 const uploadDesign = multer({
-  storage,
-  fileFilter,
+  storage: designStorage,
+  fileFilter: designFileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024,
   },
 });
 
+const uploadDesignToCloudinary = (
+  fileBuffer
+) => {
+  return new Promise(
+    (resolve, reject) => {
+      const uploadStream =
+        cloudinary.uploader.upload_stream(
+          {
+            folder:
+              "lana-wardrobe/designs",
+            resource_type: "auto",
+          },
+          (error, result) => {
+            if (error) {
+              reject(error);
+              return;
+            }
+
+            resolve(result);
+          }
+        );
+
+      uploadStream.end(fileBuffer);
+    }
+  );
+};
 // Allow uploaded designs to be opened in browser later
 app.use(
   "/uploads",
@@ -1099,6 +1100,9 @@ app.post(
   "/api/bulk-order-requests",
   uploadDesign.single("designFile"),
   async (req, res) => {
+    let uploadedDesign = null;
+    let designSavedToDatabase = false;
+
     try {
       const {
         organizationName,
@@ -1150,12 +1154,19 @@ app.post(
         });
       }
 
+      if (req.file) {
+        uploadedDesign =
+          await uploadDesignToCloudinary(
+            req.file.buffer
+          );
+      }
+
       const designFileName = req.file
         ? req.file.originalname
         : null;
 
-      const designFilePath = req.file
-        ? `/uploads/designs/${req.file.filename}`
+      const designFilePath = uploadedDesign
+        ? uploadedDesign.secure_url
         : null;
 
       const result = await pool.query(
@@ -1212,19 +1223,41 @@ app.post(
         ]
       );
 
-      res.status(201).json({
+      designSavedToDatabase = true;
+
+      return res.status(201).json({
         success: true,
         message:
           "Bulk order request submitted successfully.",
         request: result.rows[0],
       });
     } catch (error) {
+      if (
+        uploadedDesign?.public_id &&
+        !designSavedToDatabase
+      ) {
+        try {
+          await cloudinary.uploader.destroy(
+            uploadedDesign.public_id,
+            {
+              resource_type:
+                uploadedDesign.resource_type,
+            }
+          );
+        } catch (cleanupError) {
+          console.error(
+            "Bulk design Cloudinary cleanup error:",
+            cleanupError
+          );
+        }
+      }
+
       console.error(
         "Bulk order request error:",
         error
       );
 
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message:
           "Failed to submit bulk order request.",
@@ -1241,6 +1274,9 @@ app.post(
   "/api/customization-requests",
   uploadDesign.single("designFile"),
   async (req, res) => {
+    let uploadedDesign = null;
+    let designSavedToDatabase = false;
+
     try {
       const {
         name,
@@ -1285,12 +1321,19 @@ app.post(
         });
       }
 
+      if (req.file) {
+        uploadedDesign =
+          await uploadDesignToCloudinary(
+            req.file.buffer
+          );
+      }
+
       const designFileName = req.file
         ? req.file.originalname
         : null;
 
-      const designFilePath = req.file
-        ? `/uploads/designs/${req.file.filename}`
+      const designFilePath = uploadedDesign
+        ? uploadedDesign.secure_url
         : null;
 
       const result = await pool.query(
@@ -1331,19 +1374,41 @@ app.post(
         ]
       );
 
-      res.status(201).json({
+      designSavedToDatabase = true;
+
+      return res.status(201).json({
         success: true,
         message:
           "Customization request submitted successfully.",
         request: result.rows[0],
       });
     } catch (error) {
+      if (
+        uploadedDesign?.public_id &&
+        !designSavedToDatabase
+      ) {
+        try {
+          await cloudinary.uploader.destroy(
+            uploadedDesign.public_id,
+            {
+              resource_type:
+                uploadedDesign.resource_type,
+            }
+          );
+        } catch (cleanupError) {
+          console.error(
+            "Customization design Cloudinary cleanup error:",
+            cleanupError
+          );
+        }
+      }
+
       console.error(
         "Customization request error:",
         error
       );
 
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message:
           "Failed to submit customization request.",
@@ -1772,6 +1837,7 @@ app.put(
 
 // ========================================
 // ADMIN - DOWNLOAD CUSTOMER DESIGN FILE
+// Supports new Cloudinary files + legacy local files
 // ========================================
 
 app.get(
@@ -1810,7 +1876,10 @@ app.get(
 
       const result = await pool.query(
         `
-        SELECT id, design_file_path
+        SELECT
+          id,
+          design_file_name,
+          design_file_path
         FROM ${tableName}
         WHERE id = $1
         LIMIT 1
@@ -1825,8 +1894,9 @@ app.get(
         });
       }
 
+      const designRecord = result.rows[0];
       const designFilePath =
-        result.rows[0].design_file_path;
+        designRecord.design_file_path;
 
       if (!designFilePath) {
         return res.status(404).json({
@@ -1836,24 +1906,105 @@ app.get(
         });
       }
 
-      const fileName =
+      const requestedDownloadName =
+        designRecord.design_file_name ||
+        path.basename(designFilePath) ||
+        `design-${requestId}`;
+
+      // ----------------------------------------
+      // NEW FILES: CLOUDINARY
+      // ----------------------------------------
+      if (/^https:\/\//i.test(designFilePath)) {
+        let designUrl;
+
+        try {
+          designUrl = new URL(designFilePath);
+        } catch {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid design file URL.",
+          });
+        }
+
+        // Only proxy files from the Cloudinary host
+        // used by Lana Wardrobe. This prevents this
+        // endpoint from becoming a generic URL fetcher.
+        if (
+          designUrl.protocol !== "https:" ||
+          designUrl.hostname !== "res.cloudinary.com"
+        ) {
+          return res.status(400).json({
+            success: false,
+            message:
+              "Unsupported design file location.",
+          });
+        }
+
+        const cloudResponse =
+          await fetch(designUrl.toString());
+
+        if (!cloudResponse.ok) {
+          console.error(
+            "Cloudinary design download failed:",
+            cloudResponse.status
+          );
+
+          return res
+            .status(
+              cloudResponse.status === 404
+                ? 404
+                : 502
+            )
+            .json({
+              success: false,
+              message:
+                "Design file could not be retrieved from cloud storage.",
+            });
+        }
+
+        const fileBuffer = Buffer.from(
+          await cloudResponse.arrayBuffer()
+        );
+
+        const cloudContentType =
+          cloudResponse.headers.get(
+            "content-type"
+          );
+
+        res.attachment(
+          requestedDownloadName
+        );
+
+        if (cloudContentType) {
+          res.setHeader(
+            "Content-Type",
+            cloudContentType
+          );
+        }
+
+        return res.send(fileBuffer);
+      }
+
+      // ----------------------------------------
+      // LEGACY FILES: RAILWAY LOCAL STORAGE
+      // ----------------------------------------
+      const legacyFileName =
         path.basename(designFilePath);
 
-      const fullFilePath =
-        path.join(
-          __dirname,
-          "Uploads",
-          "designs",
-          fileName
-        );
+      const fullFilePath = path.join(
+        __dirname,
+        "Uploads",
+        "designs",
+        legacyFileName
+      );
 
       return res.download(
         fullFilePath,
-        fileName,
+        requestedDownloadName,
         (error) => {
           if (error) {
             console.error(
-              "Design file download error:",
+              "Legacy design file download error:",
               error
             );
 
@@ -1883,6 +2034,7 @@ app.get(
     }
   }
 );
+
 // =========================
 // OTP HELPER
 // =========================
