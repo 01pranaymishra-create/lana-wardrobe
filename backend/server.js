@@ -1537,6 +1537,238 @@ app.get(
     }
   }
 );
+
+// ========================================
+// ADMIN - UPDATE BULK ORDER REQUEST STATUS
+// ========================================
+
+app.put(
+  "/api/admin/bulk-order-requests/:id/status",
+  authenticateUser,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const requestId = Number(req.params.id);
+      const { status } = req.body;
+
+      const allowedStatuses = [
+        "new",
+        "contacted",
+        "completed",
+        "closed",
+      ];
+
+      if (
+        !Number.isInteger(requestId) ||
+        requestId <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid request ID.",
+        });
+      }
+
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid request status.",
+        });
+      }
+
+      const result = await pool.query(
+        `
+        UPDATE bulk_order_requests
+        SET
+          status = $1,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING *
+        `,
+        [status, requestId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Bulk order request not found.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message:
+          "Bulk order request status updated successfully.",
+        request: result.rows[0],
+      });
+    } catch (error) {
+      console.error(
+        "Bulk order request status update error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to update bulk order request status.",
+      });
+    }
+  }
+);
+
+// ========================================
+// ADMIN - UPDATE CUSTOMIZATION REQUEST STATUS
+// ========================================
+
+app.put(
+  "/api/admin/customization-requests/:id/status",
+  authenticateUser,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const requestId = Number(req.params.id);
+      const { status } = req.body;
+
+      const allowedStatuses = [
+        "new",
+        "contacted",
+        "completed",
+        "closed",
+      ];
+
+      if (
+        !Number.isInteger(requestId) ||
+        requestId <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid request ID.",
+        });
+      }
+
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid request status.",
+        });
+      }
+
+      const result = await pool.query(
+        `
+        UPDATE customization_requests
+        SET
+          status = $1,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING *
+        `,
+        [status, requestId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Customization request not found.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message:
+          "Customization request status updated successfully.",
+        request: result.rows[0],
+      });
+    } catch (error) {
+      console.error(
+        "Customization request status update error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to update customization request status.",
+      });
+    }
+  }
+);
+
+// ========================================
+// ADMIN - UPDATE CONTACT MESSAGE STATUS
+// ========================================
+
+app.put(
+  "/api/admin/contact-messages/:id/status",
+  authenticateUser,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const messageId = Number(req.params.id);
+      const { status } = req.body;
+
+      const allowedStatuses = [
+        "new",
+        "contacted",
+        "completed",
+        "closed",
+      ];
+
+      if (
+        !Number.isInteger(messageId) ||
+        messageId <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid message ID.",
+        });
+      }
+
+      if (!allowedStatuses.includes(status)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid message status.",
+        });
+      }
+
+      const result = await pool.query(
+        `
+        UPDATE contact_messages
+        SET
+          status = $1,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING *
+        `,
+        [status, messageId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Contact message not found.",
+        });
+      }
+
+      return res.json({
+        success: true,
+        message:
+          "Contact message status updated successfully.",
+        messageData: result.rows[0],
+      });
+    } catch (error) {
+      console.error(
+        "Contact message status update error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to update contact message status.",
+      });
+    }
+  }
+);
 // =========================
 // OTP HELPER
 // =========================
