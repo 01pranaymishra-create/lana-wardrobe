@@ -7935,3 +7935,169 @@ button {
     width: 100%;
   }
 }
+
+/* ========================================
+   ADMIN REQUEST STATUS CONTROLS
+======================================== */
+
+.request-status-filters {
+  max-width: 1150px;
+  margin: 0 auto 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  gap: 10px;
+}
+
+.request-status-filter {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 9px 15px;
+
+  border: 1px solid #ddd7cf;
+  border-radius: 999px;
+
+  background: #ffffff;
+  color: #555555;
+
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.request-status-filter:hover {
+  border-color: #111111;
+  color: #111111;
+}
+
+.request-status-filter.active {
+  background: #111111;
+  color: #ffffff;
+  border-color: #111111;
+}
+
+.request-status-filter span {
+  min-width: 20px;
+  height: 20px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 5px;
+
+  border-radius: 999px;
+
+  background: #f0ece6;
+  color: #444444;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.request-status-filter.active span {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+}
+
+
+/* Request Status Dropdown */
+
+select.request-status {
+  min-width: 135px;
+
+  padding: 9px 34px 9px 14px;
+
+  border: 1px solid #d7d1c9;
+  border-radius: 999px;
+
+  background-color: #f7f4ef;
+  color: #222222;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+
+  cursor: pointer;
+  outline: none;
+}
+
+select.request-status:hover {
+  border-color: #999999;
+}
+
+select.request-status:focus {
+  border-color: #111111;
+}
+
+select.request-status:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+
+/* Status Update Error */
+
+.request-update-error {
+  max-width: 1150px;
+
+  margin: -10px auto 25px;
+  padding: 13px 16px;
+
+  border: 1px solid #e6c4c4;
+  border-radius: 8px;
+
+  background: #fff5f5;
+  color: #9b2c2c;
+
+  font-size: 13px;
+  text-align: center;
+}
+
+
+/* ========================================
+   STATUS CONTROLS - MOBILE
+======================================== */
+
+@media (max-width: 600px) {
+  .request-status-filters {
+    justify-content: flex-start;
+
+    gap: 8px;
+
+    margin-bottom: 24px;
+  }
+
+  .request-status-filter {
+    padding: 8px 12px;
+
+    font-size: 11px;
+  }
+
+  select.request-status {
+    min-width: 125px;
+
+    padding: 8px 30px 8px 12px;
+  }
+
+  .request-card-header {
+    align-items: flex-start;
+    gap: 12px;
+  }
+}
