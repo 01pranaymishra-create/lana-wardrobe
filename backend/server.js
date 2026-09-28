@@ -1769,6 +1769,120 @@ app.put(
     }
   }
 );
+
+// ========================================
+// ADMIN - DOWNLOAD CUSTOMER DESIGN FILE
+// ========================================
+
+app.get(
+  "/api/admin/request-design/:type/:id/download",
+  authenticateUser,
+  requireAdmin,
+  async (req, res) => {
+    try {
+      const requestId = Number(req.params.id);
+      const requestType = req.params.type;
+
+      if (
+        !Number.isInteger(requestId) ||
+        requestId <= 0
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid request ID.",
+        });
+      }
+
+      let tableName = "";
+
+      if (requestType === "bulk") {
+        tableName = "bulk_order_requests";
+      } else if (
+        requestType === "customization"
+      ) {
+        tableName = "customization_requests";
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid request type.",
+        });
+      }
+
+      const result = await pool.query(
+        `
+        SELECT id, design_file_path
+        FROM ${tableName}
+        WHERE id = $1
+        LIMIT 1
+        `,
+        [requestId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: "Request not found.",
+        });
+      }
+
+      const designFilePath =
+        result.rows[0].design_file_path;
+
+      if (!designFilePath) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "No design file is attached to this request.",
+        });
+      }
+
+      const fileName =
+        path.basename(designFilePath);
+
+      const fullFilePath =
+        path.join(
+          __dirname,
+          "Uploads",
+          "designs",
+          fileName
+        );
+
+      return res.download(
+        fullFilePath,
+        fileName,
+        (error) => {
+          if (error) {
+            console.error(
+              "Design file download error:",
+              error
+            );
+
+            if (!res.headersSent) {
+              return res
+                .status(404)
+                .json({
+                  success: false,
+                  message:
+                    "Design file could not be found on the server.",
+                });
+            }
+          }
+        }
+      );
+    } catch (error) {
+      console.error(
+        "Admin design download error:",
+        error
+      );
+
+      return res.status(500).json({
+        success: false,
+        message:
+          "Failed to download design file.",
+      });
+    }
+  }
+);
 // =========================
 // OTP HELPER
 // =========================
