@@ -8122,3 +8122,107 @@ select.request-status:disabled {
   text-decoration: none;
   font: inherit;
 }
+
+/* ========================================
+   ADMIN REQUESTS - COMPACT MOBILE VIEW
+======================================== */
+
+@media (max-width: 600px) {
+  .requests-section {
+    padding: 0 10px;
+  }
+
+  .request-card-list {
+    gap: 12px;
+  }
+
+  .request-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .request-card-header {
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+  }
+
+  .request-label {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+  }
+
+  .request-card-header h3 {
+    font-size: 18px;
+    margin-top: 4px;
+  }
+
+  .request-status {
+    min-width: 105px;
+    height: 36px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  .request-details-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+    gap: 12px 10px;
+  }
+
+  .request-details-grid > div {
+    min-width: 0;
+  }
+
+  .request-details-grid span {
+    font-size: 9px;
+    margin-bottom: 3px;
+  }
+
+  .request-details-grid strong {
+    font-size: 12px;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .request-grid-full {
+    grid-column: 1 / -1;
+  }
+
+  .request-message-box {
+    margin-top: 12px;
+    padding: 10px 12px;
+  }
+
+  .request-message-box span {
+    font-size: 9px;
+  }
+
+  .request-message-box p {
+    font-size: 12px;
+    line-height: 1.4;
+    margin-top: 5px;
+  }
+
+  .request-card-footer {
+    margin-top: 12px;
+    padding-top: 12px;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .request-card-footer > span {
+    font-size: 10px;
+  }
+
+  .request-file-actions {
+    width: 100%;
+    gap: 8px;
+  }
+
+  .request-file-actions .request-file-button {
+    flex: 1;
+    min-height: 38px;
+    padding: 0 10px;
+    font-size: 11px;
+  }
+}
