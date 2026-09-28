@@ -843,10 +843,7 @@ console.log(
       console.log(
         "========================================"
       );
-      console.log(
-  "Ekart webhook header names:",
-  Object.keys(req.headers)
-);
+
 
       return res.status(200).json({
         success: true,
