@@ -1,25 +1,38 @@
 import { useEffect, useState } from "react";
 
 function AdminRequests() {
-  const [activeTab, setActiveTab] =
-    useState("bulk");
+  const [activeTab, setActiveTab] = useState("bulk");
 
-  const [bulkRequests, setBulkRequests] =
-    useState([]);
+  const [bulkRequests, setBulkRequests] = useState([]);
 
   const [
     customizationRequests,
     setCustomizationRequests,
   ] = useState([]);
 
-  const [contactMessages, setContactMessages] =
-    useState([]);
+  const [
+    contactMessages,
+    setContactMessages,
+  ] = useState([]);
 
   const [loading, setLoading] =
     useState(true);
 
   const [error, setError] =
     useState("");
+
+  const [statusFilter, setStatusFilter] =
+    useState("all");
+
+  const [
+    updatingStatus,
+    setUpdatingStatus,
+  ] = useState("");
+
+  const [
+    statusError,
+    setStatusError,
+  ] = useState("");
 
   useEffect(() => {
     const loadRequests = async () => {
@@ -114,9 +127,9 @@ function AdminRequests() {
   const formatDate = (value) => {
     if (!value) return "-";
 
-    return new Date(value).toLocaleString(
-      "en-IN"
-    );
+    return new Date(
+      value
+    ).toLocaleString("en-IN");
   };
 
   const formatSizes = (sizes) => {
@@ -147,11 +160,200 @@ function AdminRequests() {
       .join(", ");
   };
 
+  const statusOptions = [
+    "new",
+    "contacted",
+    "completed",
+    "closed",
+  ];
+
+  const formatStatus = (status) => {
+    if (!status) return "New";
+
+    return (
+      status.charAt(0).toUpperCase() +
+      status.slice(1)
+    );
+  };
+
+  const updateRequestStatus = async (
+    type,
+    id,
+    newStatus
+  ) => {
+    const updateKey =
+      `${type}-${id}`;
+
+    try {
+      setStatusError("");
+      setUpdatingStatus(updateKey);
+
+      const token =
+        localStorage.getItem(
+          "lana_token"
+        );
+
+      let url = "";
+
+      if (type === "bulk") {
+        url =
+          `https://api.lanawardrobe.in/api/admin/bulk-order-requests/${id}/status`;
+      } else if (
+        type === "customization"
+      ) {
+        url =
+          `https://api.lanawardrobe.in/api/admin/customization-requests/${id}/status`;
+      } else if (
+        type === "contact"
+      ) {
+        url =
+          `https://api.lanawardrobe.in/api/admin/contact-messages/${id}/status`;
+      } else {
+        throw new Error(
+          "Invalid request type."
+        );
+      }
+
+      const response =
+        await fetch(url, {
+          method: "PUT",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+
+            Authorization:
+              `Bearer ${token}`,
+          },
+
+          body: JSON.stringify({
+            status: newStatus,
+          }),
+        });
+
+      const data =
+        await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            "Failed to update status."
+        );
+      }
+
+      if (type === "bulk") {
+        setBulkRequests(
+          (current) =>
+            current.map(
+              (request) =>
+                request.id === id
+                  ? data.request
+                  : request
+            )
+        );
+      }
+
+      if (
+        type === "customization"
+      ) {
+        setCustomizationRequests(
+          (current) =>
+            current.map(
+              (request) =>
+                request.id === id
+                  ? data.request
+                  : request
+            )
+        );
+      }
+
+      if (type === "contact") {
+        setContactMessages(
+          (current) =>
+            current.map(
+              (message) =>
+                message.id === id
+                  ? data.messageData
+                  : message
+            )
+        );
+      }
+    } catch (err) {
+      console.error(
+        "Request status update error:",
+        err
+      );
+
+      setStatusError(
+        err.message ||
+          "Failed to update request status."
+      );
+    } finally {
+      setUpdatingStatus("");
+    }
+  };
+
+  const filterRequests = (
+    items
+  ) => {
+    if (
+      statusFilter === "all"
+    ) {
+      return items;
+    }
+
+    return items.filter(
+      (item) =>
+        (item.status || "new") ===
+        statusFilter
+    );
+  };
+
+  const filteredBulkRequests =
+    filterRequests(bulkRequests);
+
+  const filteredCustomizationRequests =
+    filterRequests(
+      customizationRequests
+    );
+
+  const filteredContactMessages =
+    filterRequests(contactMessages);
+
+  const currentRequests =
+    activeTab === "bulk"
+      ? bulkRequests
+      : activeTab ===
+          "customization"
+        ? customizationRequests
+        : contactMessages;
+
+  const getStatusCount = (
+    status
+  ) => {
+    if (status === "all") {
+      return currentRequests.length;
+    }
+
+    return currentRequests.filter(
+      (item) =>
+        (item.status || "new") ===
+        status
+    ).length;
+  };
+
+  const changeTab = (tab) => {
+    setActiveTab(tab);
+    setStatusFilter("all");
+    setStatusError("");
+  };
+
   if (loading) {
     return (
       <main className="admin-page">
         <div className="admin-request-state">
-          Loading customer requests...
+          Loading customer
+          requests...
         </div>
       </main>
     );
@@ -172,12 +374,14 @@ function AdminRequests() {
       <section className="admin-header">
         <p>LANA WARDROBE</p>
 
-        <h1>Customer Requests</h1>
+        <h1>
+          Customer Requests
+        </h1>
 
         <p>
           Manage bulk orders,
-          customization requests and
-          contact messages.
+          customization requests
+          and contact messages.
         </p>
       </section>
 
@@ -190,29 +394,36 @@ function AdminRequests() {
               : "request-tab"
           }
           onClick={() =>
-            setActiveTab("bulk")
+            changeTab("bulk")
           }
         >
           Bulk Orders
-          <span>{bulkRequests.length}</span>
+
+          <span>
+            {bulkRequests.length}
+          </span>
         </button>
 
         <button
           type="button"
           className={
-            activeTab === "customization"
+            activeTab ===
+            "customization"
               ? "request-tab active"
               : "request-tab"
           }
           onClick={() =>
-            setActiveTab(
+            changeTab(
               "customization"
             )
           }
         >
           Customization
+
           <span>
-            {customizationRequests.length}
+            {
+              customizationRequests.length
+            }
           </span>
         </button>
 
@@ -224,39 +435,84 @@ function AdminRequests() {
               : "request-tab"
           }
           onClick={() =>
-            setActiveTab("contact")
+            changeTab("contact")
           }
         >
           Contact Messages
+
           <span>
             {contactMessages.length}
           </span>
         </button>
       </section>
 
+      <section className="request-status-filters">
+        {[
+          "all",
+          "new",
+          "contacted",
+          "completed",
+          "closed",
+        ].map((status) => (
+          <button
+            key={status}
+            type="button"
+            className={
+              statusFilter ===
+              status
+                ? "request-status-filter active"
+                : "request-status-filter"
+            }
+            onClick={() =>
+              setStatusFilter(
+                status
+              )
+            }
+          >
+            {formatStatus(status)}
+
+            <span>
+              {getStatusCount(
+                status
+              )}
+            </span>
+          </button>
+        ))}
+      </section>
+
+      {statusError && (
+        <div className="request-update-error">
+          {statusError}
+        </div>
+      )}
+
       {activeTab === "bulk" && (
         <section className="requests-section">
           <div className="requests-section-heading">
             <div>
               <p>BULK ORDERS</p>
+
               <h2>
                 Bulk Order Requests
               </h2>
             </div>
 
             <span>
-              {bulkRequests.length}{" "}
-              requests
+              {filteredBulkRequests.length}{" "}
+              shown /{" "}
+              {bulkRequests.length} total
             </span>
           </div>
 
-          {bulkRequests.length === 0 ? (
+          {filteredBulkRequests.length ===
+          0 ? (
             <div className="admin-request-state">
-              No bulk order requests.
+              No bulk requests
+              match this status.
             </div>
           ) : (
             <div className="request-card-list">
-              {bulkRequests.map(
+              {filteredBulkRequests.map(
                 (request) => (
                   <article
                     key={request.id}
@@ -274,10 +530,44 @@ function AdminRequests() {
                         </h3>
                       </div>
 
-                      <span className="request-status">
-                        {request.status ||
-                          "new"}
-                      </span>
+                      <select
+                        className="request-status"
+                        value={
+                          request.status ||
+                          "new"
+                        }
+                        disabled={
+                          updatingStatus ===
+                          `bulk-${request.id}`
+                        }
+                        onChange={(
+                          event
+                        ) =>
+                          updateRequestStatus(
+                            "bulk",
+                            request.id,
+                            event.target
+                              .value
+                          )
+                        }
+                      >
+                        {statusOptions.map(
+                          (status) => (
+                            <option
+                              key={
+                                status
+                              }
+                              value={
+                                status
+                              }
+                            >
+                              {formatStatus(
+                                status
+                              )}
+                            </option>
+                          )
+                        )}
+                      </select>
                     </div>
 
                     <div className="request-details-grid">
@@ -285,6 +575,7 @@ function AdminRequests() {
                         <span>
                           Organization
                         </span>
+
                         <strong>
                           {
                             request.organization_name
@@ -296,6 +587,7 @@ function AdminRequests() {
                         <span>
                           Contact Person
                         </span>
+
                         <strong>
                           {
                             request.contact_person
@@ -304,14 +596,22 @@ function AdminRequests() {
                       </div>
 
                       <div>
-                        <span>Phone</span>
+                        <span>
+                          Phone
+                        </span>
+
                         <strong>
-                          {request.phone}
+                          {
+                            request.phone
+                          }
                         </strong>
                       </div>
 
                       <div>
-                        <span>Email</span>
+                        <span>
+                          Email
+                        </span>
+
                         <strong>
                           {request.email ||
                             "-"}
@@ -322,6 +622,7 @@ function AdminRequests() {
                         <span>
                           T-shirt Type
                         </span>
+
                         <strong>
                           {
                             request.tshirt_type
@@ -330,7 +631,10 @@ function AdminRequests() {
                       </div>
 
                       <div>
-                        <span>Fabric</span>
+                        <span>
+                          Fabric
+                        </span>
+
                         <strong>
                           {request.fabric ||
                             "-"}
@@ -338,7 +642,10 @@ function AdminRequests() {
                       </div>
 
                       <div>
-                        <span>Color</span>
+                        <span>
+                          Color
+                        </span>
+
                         <strong>
                           {request.color_name ||
                             request.color_hex ||
@@ -350,6 +657,7 @@ function AdminRequests() {
                         <span>
                           Total Quantity
                         </span>
+
                         <strong>
                           {
                             request.total_quantity
@@ -361,6 +669,7 @@ function AdminRequests() {
                         <span>
                           Size Quantities
                         </span>
+
                         <strong>
                           {formatSizes(
                             request.size_quantities
@@ -372,10 +681,10 @@ function AdminRequests() {
                         <span>
                           Print Position
                         </span>
+
                         <strong>
-                          {
-                            request.print_position
-                          }
+                          {request.print_position ||
+                            "-"}
                         </strong>
                       </div>
 
@@ -383,6 +692,7 @@ function AdminRequests() {
                         <span>
                           Required Date
                         </span>
+
                         <strong>
                           {request.required_date
                             ? new Date(
@@ -398,6 +708,7 @@ function AdminRequests() {
                         <span>
                           Delivery City
                         </span>
+
                         <strong>
                           {request.delivery_city ||
                             "-"}
@@ -407,9 +718,14 @@ function AdminRequests() {
 
                     {request.notes && (
                       <div className="request-message-box">
-                        <span>Notes</span>
+                        <span>
+                          Notes
+                        </span>
+
                         <p>
-                          {request.notes}
+                          {
+                            request.notes
+                          }
                         </p>
                       </div>
                     )}
@@ -446,28 +762,38 @@ function AdminRequests() {
         <section className="requests-section">
           <div className="requests-section-heading">
             <div>
-              <p>CUSTOMIZATION</p>
+              <p>
+                CUSTOMIZATION
+              </p>
+
               <h2>
-                Customization Requests
+                Customization
+                Requests
               </h2>
             </div>
 
             <span>
               {
+                filteredCustomizationRequests.length
+              }{" "}
+              shown /{" "}
+              {
                 customizationRequests.length
               }{" "}
-              requests
+              total
             </span>
           </div>
 
-          {customizationRequests.length ===
+          {filteredCustomizationRequests.length ===
           0 ? (
             <div className="admin-request-state">
-              No customization requests.
+              No customization
+              requests match this
+              status.
             </div>
           ) : (
             <div className="request-card-list">
-              {customizationRequests.map(
+              {filteredCustomizationRequests.map(
                 (request) => (
                   <article
                     key={request.id}
@@ -485,15 +811,52 @@ function AdminRequests() {
                         </h3>
                       </div>
 
-                      <span className="request-status">
-                        {request.status ||
-                          "new"}
-                      </span>
+                      <select
+                        className="request-status"
+                        value={
+                          request.status ||
+                          "new"
+                        }
+                        disabled={
+                          updatingStatus ===
+                          `customization-${request.id}`
+                        }
+                        onChange={(
+                          event
+                        ) =>
+                          updateRequestStatus(
+                            "customization",
+                            request.id,
+                            event.target
+                              .value
+                          )
+                        }
+                      >
+                        {statusOptions.map(
+                          (status) => (
+                            <option
+                              key={
+                                status
+                              }
+                              value={
+                                status
+                              }
+                            >
+                              {formatStatus(
+                                status
+                              )}
+                            </option>
+                          )
+                        )}
+                      </select>
                     </div>
 
                     <div className="request-details-grid">
                       <div>
-                        <span>Customer</span>
+                        <span>
+                          Customer
+                        </span>
+
                         <strong>
                           {
                             request.customer_name
@@ -502,14 +865,22 @@ function AdminRequests() {
                       </div>
 
                       <div>
-                        <span>Phone</span>
+                        <span>
+                          Phone
+                        </span>
+
                         <strong>
-                          {request.phone}
+                          {
+                            request.phone
+                          }
                         </strong>
                       </div>
 
                       <div>
-                        <span>Email</span>
+                        <span>
+                          Email
+                        </span>
+
                         <strong>
                           {request.email ||
                             "-"}
@@ -520,6 +891,7 @@ function AdminRequests() {
                         <span>
                           T-shirt Type
                         </span>
+
                         <strong>
                           {
                             request.tshirt_type
@@ -528,7 +900,10 @@ function AdminRequests() {
                       </div>
 
                       <div>
-                        <span>Color</span>
+                        <span>
+                          Color
+                        </span>
+
                         <strong>
                           {request.color_name ||
                             request.color_hex ||
@@ -540,6 +915,7 @@ function AdminRequests() {
                         <span>
                           Total Quantity
                         </span>
+
                         <strong>
                           {
                             request.total_quantity
@@ -551,6 +927,7 @@ function AdminRequests() {
                         <span>
                           Size Quantities
                         </span>
+
                         <strong>
                           {formatSizes(
                             request.size_quantities
@@ -562,19 +939,24 @@ function AdminRequests() {
                         <span>
                           Print Position
                         </span>
+
                         <strong>
-                          {
-                            request.print_position
-                          }
+                          {request.print_position ||
+                            "-"}
                         </strong>
                       </div>
                     </div>
 
                     {request.notes && (
                       <div className="request-message-box">
-                        <span>Notes</span>
+                        <span>
+                          Notes
+                        </span>
+
                         <p>
-                          {request.notes}
+                          {
+                            request.notes
+                          }
                         </p>
                       </div>
                     )}
@@ -606,29 +988,37 @@ function AdminRequests() {
         </section>
       )}
 
-      {activeTab === "contact" && (
+      {activeTab ===
+        "contact" && (
         <section className="requests-section">
           <div className="requests-section-heading">
             <div>
               <p>MESSAGES</p>
+
               <h2>
                 Contact Messages
               </h2>
             </div>
 
             <span>
+              {
+                filteredContactMessages.length
+              }{" "}
+              shown /{" "}
               {contactMessages.length}{" "}
-              messages
+              total
             </span>
           </div>
 
-          {contactMessages.length === 0 ? (
+          {filteredContactMessages.length ===
+          0 ? (
             <div className="admin-request-state">
-              No contact messages.
+              No contact messages
+              match this status.
             </div>
           ) : (
             <div className="request-card-list">
-              {contactMessages.map(
+              {filteredContactMessages.map(
                 (message) => (
                   <article
                     key={message.id}
@@ -646,15 +1036,52 @@ function AdminRequests() {
                         </h3>
                       </div>
 
-                      <span className="request-status">
-                        {message.status ||
-                          "new"}
-                      </span>
+                      <select
+                        className="request-status"
+                        value={
+                          message.status ||
+                          "new"
+                        }
+                        disabled={
+                          updatingStatus ===
+                          `contact-${message.id}`
+                        }
+                        onChange={(
+                          event
+                        ) =>
+                          updateRequestStatus(
+                            "contact",
+                            message.id,
+                            event.target
+                              .value
+                          )
+                        }
+                      >
+                        {statusOptions.map(
+                          (status) => (
+                            <option
+                              key={
+                                status
+                              }
+                              value={
+                                status
+                              }
+                            >
+                              {formatStatus(
+                                status
+                              )}
+                            </option>
+                          )
+                        )}
+                      </select>
                     </div>
 
                     <div className="request-details-grid">
                       <div>
-                        <span>Name</span>
+                        <span>
+                          Name
+                        </span>
+
                         <strong>
                           {
                             message.customer_name
@@ -663,7 +1090,10 @@ function AdminRequests() {
                       </div>
 
                       <div>
-                        <span>Phone</span>
+                        <span>
+                          Phone
+                        </span>
+
                         <strong>
                           {message.phone ||
                             "-"}
@@ -671,9 +1101,14 @@ function AdminRequests() {
                       </div>
 
                       <div>
-                        <span>Email</span>
+                        <span>
+                          Email
+                        </span>
+
                         <strong>
-                          {message.email}
+                          {
+                            message.email
+                          }
                         </strong>
                       </div>
 
@@ -681,6 +1116,7 @@ function AdminRequests() {
                         <span>
                           Category
                         </span>
+
                         <strong>
                           {message.category ||
                             "-"}
@@ -688,7 +1124,10 @@ function AdminRequests() {
                       </div>
 
                       <div className="request-grid-full">
-                        <span>Subject</span>
+                        <span>
+                          Subject
+                        </span>
+
                         <strong>
                           {message.subject ||
                             "-"}
@@ -697,9 +1136,14 @@ function AdminRequests() {
                     </div>
 
                     <div className="request-message-box">
-                      <span>Message</span>
+                      <span>
+                        Message
+                      </span>
+
                       <p>
-                        {message.message}
+                        {
+                          message.message
+                        }
                       </p>
                     </div>
 
