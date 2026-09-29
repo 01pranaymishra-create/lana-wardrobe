@@ -99,6 +99,9 @@ export function CartProvider({ children }) {
     loadedUserId,
   ]);
 
+  /*
+    ADD ITEM TO CART
+  */
   const addToCart = (
     product,
     selectedSize,
@@ -106,7 +109,47 @@ export function CartProvider({ children }) {
     quantity
   ) => {
     if (!isLoggedIn) {
-      return;
+      return false;
+    }
+
+    const selectedColorData =
+      product.colorStock?.find(
+        (item) =>
+          item.colorName.toLowerCase() ===
+          selectedColor.toLowerCase()
+      );
+
+    const availableStock =
+      Number(
+        selectedColorData?.stockQuantity
+      ) || 0;
+
+    if (
+      availableStock <= 0 ||
+      quantity > availableStock
+    ) {
+      return false;
+    }
+
+    const cartId =
+      `${product.id}-${selectedSize}-${selectedColor}`;
+
+    const existingItem =
+      cartItems.find(
+        (item) =>
+          item.cartId === cartId
+      );
+
+    const existingQuantity =
+      Number(
+        existingItem?.quantity || 0
+      );
+
+    if (
+      existingQuantity + quantity >
+      availableStock
+    ) {
+      return false;
     }
 
     const cartItem = {
@@ -116,19 +159,18 @@ export function CartProvider({ children }) {
       selectedColor,
       quantity,
 
-      cartId:
-        `${product.id}-${selectedSize}-${selectedColor}`,
+      cartId,
     };
 
     setCartItems((currentItems) => {
-      const existingItem =
+      const currentExistingItem =
         currentItems.find(
           (item) =>
             item.cartId ===
             cartItem.cartId
         );
 
-      if (existingItem) {
+      if (currentExistingItem) {
         return currentItems.map(
           (item) =>
             item.cartId ===
@@ -148,29 +190,79 @@ export function CartProvider({ children }) {
         cartItem,
       ];
     });
+
+    return true;
   };
 
-  const updateQuantity = (
-    cartId,
-    newQuantity
-  ) => {
-    if (newQuantity < 1) {
-      return;
-    }
+  /*
+    UPDATE ITEM QUANTITY
+  */
+const updateQuantity = (
+  cartId,
+  newQuantity,
+  availableStockOverride = null
+) => {
+  if (newQuantity < 1) {
+    return false;
+  }
 
-    setCartItems((currentItems) =>
-      currentItems.map((item) =>
+  const cartItem =
+    cartItems.find(
+      (item) =>
         item.cartId === cartId
-          ? {
-              ...item,
-              quantity:
-                newQuantity,
-            }
-          : item
-      )
     );
-  };
 
+  if (!cartItem) {
+    return false;
+  }
+
+  let availableStock;
+
+  if (
+    availableStockOverride !== null &&
+    availableStockOverride !== undefined
+  ) {
+    availableStock =
+      Number(availableStockOverride) || 0;
+  } else {
+    const selectedColorData =
+      cartItem.colorStock?.find(
+        (item) =>
+          item.colorName.toLowerCase() ===
+          cartItem.selectedColor.toLowerCase()
+      );
+
+    availableStock =
+      Number(
+        selectedColorData?.stockQuantity
+      ) || 0;
+  }
+
+  if (
+    availableStock <= 0 ||
+    newQuantity > availableStock
+  ) {
+    return false;
+  }
+
+  setCartItems((currentItems) =>
+    currentItems.map((item) =>
+      item.cartId === cartId
+        ? {
+            ...item,
+            quantity:
+              newQuantity,
+          }
+        : item
+    )
+  );
+
+  return true;
+};
+
+  /*
+    REMOVE ITEM FROM CART
+  */
   const removeFromCart = (
     cartId
   ) => {
@@ -182,6 +274,9 @@ export function CartProvider({ children }) {
     );
   };
 
+  /*
+    CLEAR CART
+  */
   const clearCart = () => {
     setCartItems([]);
   };

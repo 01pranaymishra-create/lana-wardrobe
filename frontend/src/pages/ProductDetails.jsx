@@ -830,12 +830,21 @@ const handleBuyNow = () => {
                     return;
                   }
 
-                  addToCart(
-                    product,
-                    selectedSize,
-                    selectedColor,
-                    quantity
-                  );
+                 const addedSuccessfully =
+                    addToCart(
+                      product,
+                      selectedSize,
+                      selectedColor,
+                      quantity
+                    );
+
+                  if (!addedSuccessfully) {
+                    alert(
+                      "Requested quantity is not available for this color."
+                    );
+
+                    return;
+                  }
 
                   alert(
                     "Product added to cart!"
