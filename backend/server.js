@@ -716,6 +716,13 @@ if (mappedOrderStatus) {
 
     let shouldUpdateOrder = true;
 
+    // Courier cancellation/exception must not
+    // automatically cancel a Lana order or
+    // restore inventory. Admin reviews it manually.
+    if (mappedOrderStatus === "cancelled") {
+      shouldUpdateOrder = false;
+    }
+
     // Never change a cancelled or already
     // delivered Lana order automatically.
     if (
@@ -928,7 +935,7 @@ app.use((req, res, next) => {
 
   const blockedRoutes = [
     "POST /api/auth/register",
-    "POST POST /api/orders",
+    "POST /api/orders",
     "POST /api/payments/create-razorpay-order"
   ];
 
@@ -3222,16 +3229,7 @@ app.post(
         const quantity =
           Number(item.quantity);
 
-        if (
-          quantity >
-          Number(product.stock)
-        ) {
-          return res.status(400).json({
-            success: false,
-            message:
-              `Only ${product.stock} item(s) available for ${product.name}.`,
-          });
-        }
+       
 
         if (
           item.selectedSize &&
@@ -3248,18 +3246,22 @@ app.post(
         }
 
         if (
-          item.selectedColor &&
-          Array.isArray(product.colors) &&
-          !product.colors.includes(
-            item.selectedColor
+          !item.selectedColor ||
+          !Array.isArray(product.colors) ||
+          !product.colors.some(
+            (color) =>
+              String(color).toLowerCase() ===
+              String(
+                item.selectedColor
+              ).toLowerCase()
           )
         ) {
           return res.status(400).json({
             success: false,
             message:
-              `Invalid colour selected for ${product.name}.`,
+              `Please select a valid colour for ${product.name}.`,
           });
-        }
+        } 
 
         const unitPrice =
           product.discount_price !== null
@@ -3366,75 +3368,141 @@ VALUES (
 
 
       for (
-  const item
-  of validatedItems
-) {
-  // ========================================
-  // ATOMIC STOCK DEDUCTION
-  // ========================================
+        const item
+        of validatedItems
+      ) {
+        // ========================================
+        // ATOMIC COLOR-WISE STOCK DEDUCTION
+        // ========================================
 
-  const stockResult =
-    await client.query(
-      `
-      UPDATE products
-      SET
-        stock = stock - $1,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE
-        id = $2
-        AND stock >= $1
-      RETURNING
-        id,
-        name,
-        stock
-      `,
-      [
-        item.quantity,
-        item.productId,
-      ]
-    );
+        if (!item.selectedColor) {
+          throw new Error(
+            `INVALID_COLOR:${item.productName}`
+          );
+        }
 
-  if (
-    stockResult.rows.length === 0
-  ) {
-    throw new Error(
-      `INSUFFICIENT_STOCK:${item.productName}`
-    );
-  }
+        // Keep lock order consistent with product
+        // admin updates and stock restoration.
+        const productLockResult =
+          await client.query(
+            `
+            SELECT id
+            FROM products
+            WHERE id = $1
+            FOR UPDATE
+            `,
+            [item.productId]
+          );
 
-  // ========================================
-  // SAVE ORDER ITEM
-  // ========================================
+        if (
+          productLockResult.rows.length === 0
+        ) {
+          throw new Error(
+            `STOCK_SYNC_ERROR:${item.productName}`
+          );
+        }
 
-  await client.query(
-    `
-    INSERT INTO order_items (
-      order_id,
-      product_id,
-      product_name,
-      size,
-      color,
-      quantity,
-      unit_price,
-      line_total
-    )
-    VALUES (
-      $1, $2, $3, $4,
-      $5, $6, $7, $8
-    )
-    `,
-    [
-      order.id,
-      item.productId,
-      item.productName,
-      item.selectedSize,
-      item.selectedColor,
-      item.quantity,
-      item.unitPrice,
-      item.lineTotal,
-    ]
-  );
-}
+        const colorStockResult =
+          await client.query(
+            `
+            UPDATE product_color_stock
+            SET
+              stock_quantity =
+                stock_quantity - $1,
+              updated_at =
+                CURRENT_TIMESTAMP
+            WHERE
+              product_id = $2
+              AND LOWER(color_name) =
+                LOWER($3)
+              AND stock_quantity >= $1
+            RETURNING
+              product_id,
+              color_name,
+              stock_quantity
+            `,
+            [
+              item.quantity,
+              item.productId,
+              item.selectedColor,
+            ]
+          );
+
+        if (
+          colorStockResult.rows.length === 0
+        ) {
+          throw new Error(
+            `INSUFFICIENT_STOCK:${item.productName}`
+          );
+        }
+
+        // Keep legacy products.stock synchronized
+        // with the authoritative color inventory.
+        const aggregateStockResult =
+          await client.query(
+            `
+            UPDATE products
+            SET
+              stock = (
+                SELECT
+                  COALESCE(
+                    SUM(stock_quantity),
+                    0
+                  )
+                FROM product_color_stock
+                WHERE product_id = $1
+              ),
+              updated_at =
+                CURRENT_TIMESTAMP
+            WHERE id = $1
+            RETURNING
+              id,
+              stock
+            `,
+            [item.productId]
+          );
+
+        if (
+          aggregateStockResult.rows.length === 0
+        ) {
+          throw new Error(
+            `STOCK_SYNC_ERROR:${item.productName}`
+          );
+        }
+
+        // ========================================
+        // SAVE ORDER ITEM
+        // ========================================
+
+        await client.query(
+          `
+          INSERT INTO order_items (
+            order_id,
+            product_id,
+            product_name,
+            size,
+            color,
+            quantity,
+            unit_price,
+            line_total
+          )
+          VALUES (
+            $1, $2, $3, $4,
+            $5, $6, $7, $8
+          )
+          `,
+          [
+            order.id,
+            item.productId,
+            item.productName,
+            item.selectedSize,
+            item.selectedColor,
+            item.quantity,
+            item.unitPrice,
+            item.lineTotal,
+          ]
+        );
+      }
 
       await client.query(
         "COMMIT"
@@ -5882,9 +5950,11 @@ app.put(
             `
             SELECT
               product_id,
+              color,
               quantity
             FROM order_items
             WHERE order_id = $1
+            ORDER BY product_id ASC, id ASC
             `,
             [orderId]
           );
@@ -5893,28 +5963,89 @@ app.put(
           const item
           of itemsResult.rows
         ) {
+          if (!item.color) {
+            throw new Error(
+              `RESTOCK_COLOR_MISSING:${item.product_id}`
+            );
+          }
+
+          const productLockResult =
+            await client.query(
+              `
+              SELECT id
+              FROM products
+              WHERE id = $1
+              FOR UPDATE
+              `,
+              [item.product_id]
+            );
+
+          if (
+            productLockResult.rows.length === 0
+          ) {
+            throw new Error(
+              `RESTOCK_PRODUCT_MISSING:${item.product_id}`
+            );
+          }
+
+          const colorRestoreResult =
+            await client.query(
+              `
+              UPDATE product_color_stock
+              SET
+                stock_quantity =
+                  stock_quantity + $1,
+                updated_at =
+                  CURRENT_TIMESTAMP
+              WHERE
+                product_id = $2
+                AND LOWER(color_name) =
+                  LOWER($3)
+              RETURNING
+                product_id,
+                color_name,
+                stock_quantity
+              `,
+              [
+                item.quantity,
+                item.product_id,
+                item.color,
+              ]
+            );
+
+          if (
+            colorRestoreResult.rows.length === 0
+          ) {
+            throw new Error(
+              `RESTOCK_COLOR_NOT_FOUND:${item.product_id}`
+            );
+          }
+
           await client.query(
             `
             UPDATE products
             SET
-              stock =
-                stock + $1,
+              stock = (
+                SELECT
+                  COALESCE(
+                    SUM(stock_quantity),
+                    0
+                  )
+                FROM product_color_stock
+                WHERE product_id = $1
+              ),
               updated_at =
                 CURRENT_TIMESTAMP
-            WHERE id = $2
+            WHERE id = $1
             `,
-            [
-              item.quantity,
-              item.product_id,
-            ]
+            [item.product_id]
           );
         }
 
         await client.query(
           `
           UPDATE orders
-          SET
-            stock_restored = TRUE
+          SET stock_restored = TRUE
           WHERE id = $1
           `,
           [orderId]
@@ -6811,7 +6942,9 @@ app.put(
           break;
 
         case "cancelled":
-          orderStatusToSet = "cancelled";
+          // Courier cancellation does not automatically
+          // cancel the Lana order or restore stock.
+          orderStatusToSet = null;
           break;
 
         default:
@@ -8069,26 +8202,14 @@ app.post(
         }
 
         // =====================================
-        // SAFE AUTO-CANCELLATION
+        // COURIER CANCELLATION SAFETY
         // =====================================
 
-        if (
-          mappedOrderStatus ===
-          "cancelled"
-        ) {
-          const cancellableStatuses = [
-            "order_placed",
-            "confirmed",
-            "packed",
-          ];
-
-          if (
-            !cancellableStatuses.includes(
-              order.order_status
-            )
-          ) {
-            shouldUpdateOrder = false;
-          }
+        if (mappedOrderStatus === "cancelled") {
+          // Ekart cancellation/exception does not
+          // automatically cancel the Lana order or
+          // restore inventory. Admin reviews it manually.
+          shouldUpdateOrder = false;
         }
 
         if (shouldUpdateOrder) {
@@ -8116,57 +8237,9 @@ app.post(
             );
           }
 
-          // =================================
-          // RESTORE STOCK ON CANCELLATION
-          // =================================
-
-          if (
-            mappedOrderStatus ===
-              "cancelled" &&
-            !order.stock_restored
-          ) {
-            const itemsResult =
-              await client.query(
-                `
-                SELECT
-                  product_id,
-                  quantity
-                FROM order_items
-                WHERE order_id = $1
-                `,
-                [order.id]
-              );
-
-            for (
-              const item
-              of itemsResult.rows
-            ) {
-              await client.query(
-                `
-                UPDATE products
-                SET
-                  stock =
-                    stock + $1,
-                  updated_at =
-                    CURRENT_TIMESTAMP
-                WHERE id = $2
-                `,
-                [
-                  item.quantity,
-                  item.product_id,
-                ]
-              );
-            }
-
-            await client.query(
-              `
-              UPDATE orders
-              SET stock_restored = TRUE
-              WHERE id = $1
-              `,
-              [order.id]
-            );
-          }
+          // Ekart cancellation never restores stock here.
+          // Only explicit Lana order cancellation may
+          // restore inventory.
 
           // =================================
           // COD PAYMENT ON DELIVERY
@@ -9168,9 +9241,11 @@ async function expirePendingOnlineOrders() {
           `
           SELECT
             product_id,
+            color,
             quantity
           FROM order_items
           WHERE order_id = $1
+          ORDER BY product_id ASC, id ASC
           `,
           [order.id]
         );
@@ -9179,20 +9254,82 @@ async function expirePendingOnlineOrders() {
         const item
         of itemsResult.rows
       ) {
+        if (!item.color) {
+          throw new Error(
+            `RESTOCK_COLOR_MISSING:${item.product_id}`
+          );
+        }
+
+        const productLockResult =
+          await client.query(
+            `
+            SELECT id
+            FROM products
+            WHERE id = $1
+            FOR UPDATE
+            `,
+            [item.product_id]
+          );
+
+        if (
+          productLockResult.rows.length === 0
+        ) {
+          throw new Error(
+            `RESTOCK_PRODUCT_MISSING:${item.product_id}`
+          );
+        }
+
+        const colorRestoreResult =
+          await client.query(
+            `
+            UPDATE product_color_stock
+            SET
+              stock_quantity =
+                stock_quantity + $1,
+              updated_at =
+                CURRENT_TIMESTAMP
+            WHERE
+              product_id = $2
+              AND LOWER(color_name) =
+                LOWER($3)
+            RETURNING
+              product_id,
+              color_name,
+              stock_quantity
+            `,
+            [
+              item.quantity,
+              item.product_id,
+              item.color,
+            ]
+          );
+
+        if (
+          colorRestoreResult.rows.length === 0
+        ) {
+          throw new Error(
+            `RESTOCK_COLOR_NOT_FOUND:${item.product_id}`
+          );
+        }
+
         await client.query(
           `
           UPDATE products
           SET
-            stock =
-              stock + $1,
+            stock = (
+              SELECT
+                COALESCE(
+                  SUM(stock_quantity),
+                  0
+                )
+              FROM product_color_stock
+              WHERE product_id = $1
+            ),
             updated_at =
               CURRENT_TIMESTAMP
-          WHERE id = $2
+          WHERE id = $1
           `,
-          [
-            item.quantity,
-            item.product_id,
-          ]
+          [item.product_id]
         );
       }
 
