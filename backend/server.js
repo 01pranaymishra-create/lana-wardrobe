@@ -45,6 +45,54 @@ const resend = new Resend(
   process.env.RESEND_API_KEY
 );
 
+const adminNotificationEmails =
+  (
+    process.env.ADMIN_NOTIFICATION_EMAILS ||
+    ""
+  )
+    .split(",")
+    .map((email) => email.trim())
+    .filter(Boolean);
+
+const sendAdminNotificationEmail =
+  async ({
+    subject,
+    html,
+  }) => {
+    if (
+      adminNotificationEmails.length === 0
+    ) {
+      console.warn(
+        "ADMIN_NOTIFICATION_EMAILS is not configured."
+      );
+
+      return;
+    }
+
+    try {
+      const { error } =
+        await resend.emails.send({
+          from:
+            "Lana Wardrobe <no-reply@lanawardrobe.in>",
+          to: adminNotificationEmails,
+          subject,
+          html,
+        });
+
+      if (error) {
+        console.error(
+          "Admin notification email error:",
+          error
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Admin notification email exception:",
+        error
+      );
+    }
+  };
+
 const PORT = process.env.PORT || 5000;
 
 // =========================
@@ -1225,6 +1273,31 @@ app.post(
 
       designSavedToDatabase = true;
 
+      await sendAdminNotificationEmail({
+        subject: `New Bulk Order Request #${result.rows[0].id}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 650px; margin: auto;">
+            <h2>New Bulk Order Request</h2>
+
+            <p><strong>Request ID:</strong> ${result.rows[0].id}</p>
+            <p><strong>Organization:</strong> ${organizationName}</p>
+            <p><strong>Contact Person:</strong> ${contactPerson}</p>
+            <p><strong>Phone:</strong> ${phone}</p>
+            <p><strong>Email:</strong> ${email || "-"}</p>
+            <p><strong>T-shirt Type:</strong> ${tshirtType}</p>
+            <p><strong>Total Quantity:</strong> ${parsedTotalQuantity}</p>
+            <p><strong>Print Position:</strong> ${printPosition}</p>
+            <p><strong>Required Date:</strong> ${requiredDate || "-"}</p>
+            <p><strong>Delivery City:</strong> ${deliveryCity || "-"}</p>
+
+            <p style="margin-top: 24px;">
+              Open the Lana Wardrobe Admin Dashboard to review the full request.
+            </p>
+          </div>
+        `,
+    });
+
+
       return res.status(201).json({
         success: true,
         message:
@@ -1376,6 +1449,27 @@ app.post(
 
       designSavedToDatabase = true;
 
+      await sendAdminNotificationEmail({
+        subject: `New Customization Request #${result.rows[0].id}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 650px; margin: auto;">
+            <h2>New Customization Request</h2>
+
+            <p><strong>Request ID:</strong> ${result.rows[0].id}</p>
+            <p><strong>Customer:</strong> ${name}</p>
+            <p><strong>Phone:</strong> ${phone}</p>
+            <p><strong>Email:</strong> ${email || "-"}</p>
+            <p><strong>T-shirt Type:</strong> ${tshirtType}</p>
+            <p><strong>Total Quantity:</strong> ${parsedTotalQuantity}</p>
+            <p><strong>Print Position:</strong> ${printPosition}</p>
+
+            <p style="margin-top: 24px;">
+              Open the Lana Wardrobe Admin Dashboard to review the full request.
+            </p>
+          </div>
+        `,
+      });
+
       return res.status(201).json({
         success: true,
         message:
@@ -1470,6 +1564,37 @@ app.post(
           message.trim(),
         ]
       );
+
+      await sendAdminNotificationEmail({
+  subject: `New Contact Message #${result.rows[0].id}`,
+  html: `
+    <div style="font-family: Arial, sans-serif; max-width: 650px; margin: auto;">
+      <h2>New Contact Message</h2>
+
+      <p><strong>Message ID:</strong> ${result.rows[0].id}</p>
+      <p><strong>Name:</strong> ${name}</p>
+      <p><strong>Phone:</strong> ${phone || "-"}</p>
+      <p><strong>Email:</strong> ${email}</p>
+      <p><strong>Category:</strong> ${category || "-"}</p>
+      <p><strong>Subject:</strong> ${subject || "-"}</p>
+
+      <p><strong>Message:</strong></p>
+
+      <div style="
+        background: #f5f5f5;
+        padding: 12px;
+        border-radius: 8px;
+        white-space: pre-wrap;
+      ">
+        ${message}
+      </div>
+
+      <p style="margin-top: 24px;">
+        Open the Lana Wardrobe Admin Dashboard to review the full message.
+      </p>
+    </div>
+  `,
+});
 
       res.status(201).json({
         success: true,
