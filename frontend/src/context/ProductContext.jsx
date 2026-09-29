@@ -48,8 +48,17 @@ export function ProductProvider({ children }) {
           description: product.description,
           stock: product.stock,
 
-          sizes: product.sizes || [],
-          colors: product.colors || [],
+            sizes: product.sizes || [],
+            colors: product.colors || [],
+
+            colorStock: Array.isArray(product.color_stock)
+              ? product.color_stock.map((item) => ({
+                  colorName:
+                    item.color_name || "",
+                  stockQuantity:
+                    Number(item.stock_quantity) || 0,
+                }))
+              : [],
 
           imageUrl: product.image_url,
 

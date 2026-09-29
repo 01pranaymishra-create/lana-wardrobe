@@ -41,6 +41,7 @@ function ProductDetails() {
   const productIsInWishlist =
     isInWishlist(product?.id);
 
+
   // ========================================
   // PRODUCT OPTIONS
   // ========================================
@@ -59,6 +60,19 @@ function ProductDetails() {
     quantity,
     setQuantity,
   ] = useState(1);
+
+const selectedColorStock =
+  selectedColor
+    ? product?.colorStock?.find(
+        (item) =>
+          item.colorName.toLowerCase() ===
+          selectedColor.toLowerCase()
+      )?.stockQuantity ?? 0
+    : null;
+
+const selectedColorOutOfStock =
+  Boolean(selectedColor) &&
+  Number(selectedColorStock) <= 0;
 
   // ========================================
   // PRODUCT IMAGES
@@ -389,12 +403,24 @@ const handleBuyNow = () => {
     return;
   }
 
-  if (quantity > Number(product.stock)) {
-    alert(
-      `Only ${product.stock} item(s) available.`
-    );
-    return;
-  }
+  if (selectedColorOutOfStock) {
+      alert(
+        "Selected color is currently out of stock."
+      );
+
+      return;
+    }
+
+    if (
+      quantity >
+      Number(selectedColorStock)
+    ) {
+      alert(
+        "Requested quantity is not available for this color."
+      );
+
+      return;
+    }
 
   navigate("/checkout", {
     state: {
@@ -670,11 +696,10 @@ const handleBuyNow = () => {
                         : ""
                     }
 
-                    onClick={() =>
-                      setSelectedColor(
-                        color
-                      )
-                    }
+                    onClick={() => {
+                      setSelectedColor(color);
+                      setQuantity(1);
+                    }}
                   >
                     {color}
                   </button>
@@ -685,124 +710,152 @@ const handleBuyNow = () => {
 
           </div>
 
-          {/* QUANTITY */}
+            {/* QUANTITY */}
 
-          <div className="quantity-section">
+            <div className="quantity-section">
 
-            <h3>
-              Quantity
-            </h3>
+              <h3>
+                Quantity
+              </h3>
 
-            <div className="quantity-control">
+              <div className="quantity-control">
 
-              <button
-                type="button"
-                onClick={() =>
-                  setQuantity(
-                    (
-                      current
-                    ) =>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setQuantity((current) =>
                       Math.max(
                         1,
-                        current -
-                          1
+                        current - 1
                       )
-                  )
-                }
-              >
-                −
-              </button>
+                    )
+                  }
+                >
+                  −
+                </button>
 
-              <span>
-                {quantity}
-              </span>
+                <span>
+                  {quantity}
+                </span>
 
-              <button
-                type="button"
-                onClick={() =>
-                  setQuantity(
-                    (
-                      current
-                    ) =>
-                      current +
-                      1
-                  )
-                }
-              >
-                +
-              </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!selectedColor) {
+                      alert(
+                        "Please select a color first."
+                      );
+
+                      return;
+                    }
+
+                    if (
+                      Number(selectedColorStock) <= 0
+                    ) {
+                      return;
+                    }
+
+                    setQuantity((current) =>
+                      Math.min(
+                        current + 1,
+                        Number(selectedColorStock)
+                      )
+                    );
+                  }}
+                >
+                  +
+                </button>
+
+              </div>
 
             </div>
-
-          </div>
-
           {/* ACTIONS */}
 
           <div className="product-actions">
 
-            <button
-              type="button"
-              className="add-cart-button"
-
-              onClick={() => {
-
-                if (
-                  !isLoggedIn
-                ) {
-                  navigate(
-                    "/login",
-                    {
-                      state: {
-                        from:
-                          `/product/${product.id}`,
-                      },
-                    }
-                  );
-
-                  return;
-                }
-
-                if (
-                  !selectedSize
-                ) {
-                  alert(
-                    "Please select a size."
-                  );
-
-                  return;
-                }
-
-                if (
-                  !selectedColor
-                ) {
-                  alert(
-                    "Please select a color."
-                  );
-
-                  return;
-                }
-
-                addToCart(
-                  product,
-                  selectedSize,
-                  selectedColor,
-                  quantity
-                );
-
-                alert(
-                  "Product added to cart!"
-                );
-              }}
-            >
-              ADD TO CART
-            </button>
               <button
-              type="button"
-              className="buy-now-button"
-              onClick={handleBuyNow}
-            >
-              BUY NOW
-            </button>
+                type="button"
+                className="add-cart-button"
+                disabled={Boolean(
+                  selectedColorOutOfStock
+                )}
+                onClick={() => {
+
+                  if (!isLoggedIn) {
+                    navigate(
+                      "/login",
+                      {
+                        state: {
+                          from:
+                            `/product/${product.id}`,
+                        },
+                      }
+                    );
+
+                    return;
+                  }
+
+                  if (!selectedSize) {
+                    alert(
+                      "Please select a size."
+                    );
+
+                    return;
+                  }
+
+                  if (!selectedColor) {
+                    alert(
+                      "Please select a color."
+                    );
+
+                    return;
+                  }
+
+                  if (selectedColorOutOfStock) {
+                    alert(
+                      "Selected color is currently out of stock."
+                    );
+
+                    return;
+                  }
+
+                  if (
+                    quantity >
+                    Number(selectedColorStock)
+                  ) {
+                    alert(
+                      "Requested quantity is not available for this color."
+                    );
+
+                    return;
+                  }
+
+                  addToCart(
+                    product,
+                    selectedSize,
+                    selectedColor,
+                    quantity
+                  );
+
+                  alert(
+                    "Product added to cart!"
+                  );
+                }}
+              >
+                ADD TO CART
+              </button>
+
+              <button
+                type="button"
+                className="buy-now-button"
+                onClick={handleBuyNow}
+                disabled={Boolean(
+                  selectedColorOutOfStock
+                )}
+              >
+                BUY NOW
+              </button>
+
             <button
               type="button"
               className="wishlist-button"
@@ -845,10 +898,26 @@ const handleBuyNow = () => {
 
           </div>
 
-          <p className="product-stock">
-            {product.stock} items
-            available
-          </p>
+          {selectedColor ? (
+            <p
+              className="product-stock"
+              style={{
+                color:
+                  selectedColorOutOfStock
+                    ? "red"
+                    : "green",
+                fontWeight: "600",
+              }}
+            >
+              {selectedColorOutOfStock
+                ? "Out of Stock"
+                : "In Stock"}
+            </p>
+          ) : (
+            <p className="product-stock">
+              Select a color to check availability
+            </p>
+          )}
 
         </div>
 
