@@ -1119,7 +1119,30 @@ app.get("/api/db-test", async (req, res) => {
 app.get("/api/products", async (req, res) => {
   try {
     const result = await pool.query(
-      "SELECT * FROM products ORDER BY id ASC"
+      `
+      SELECT
+        p.*,
+
+        COALESCE(
+          (
+            SELECT json_agg(
+              json_build_object(
+                'color_name',
+                pcs.color_name,
+                'stock_quantity',
+                pcs.stock_quantity
+              )
+              ORDER BY pcs.id
+            )
+            FROM product_color_stock pcs
+            WHERE pcs.product_id = p.id
+          ),
+          '[]'::json
+        ) AS color_stock
+
+      FROM products p
+      ORDER BY p.id ASC
+      `
     );
 
     res.json({
@@ -1139,7 +1162,6 @@ app.get("/api/products", async (req, res) => {
     });
   }
 });
-
 // =========================
 // BULK ORDER REQUEST
 // =========================
@@ -4250,14 +4272,13 @@ app.post(
         price,
         discountPrice,
         description,
-        stock,
         sizes,
         colors,
+        colorStock,
         newArrival,
         bestSeller,
         featured,
       } = req.body;
-
       if (!name || !category || price === undefined) {
         return res.status(400).json({
           success: false,
@@ -4274,7 +4295,6 @@ app.post(
           ? null
           : Number(discountPrice);
 
-      const numericStock = Number(stock || 0);
 
       if (
         Number.isNaN(numericPrice) ||
@@ -4300,59 +4320,160 @@ app.post(
         });
       }
 
+      if (!Array.isArray(colorStock)) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "Color-wise stock data is required.",
+  });
+}
+      
+      const normalizedColorStock =
+  colorStock.map((item) => ({
+    color_name: String(
+      item.color_name || ""
+    ).trim(),
+
+    stock_quantity: Number(
+      item.stock_quantity || 0
+    ),
+  }));
+
+          const normalizedColorNames =
+  normalizedColorStock.map((item) =>
+    item.color_name.toLowerCase()
+  );
+
+const hasDuplicateColors =
+  new Set(normalizedColorNames).size !==
+  normalizedColorNames.length;
+
+if (hasDuplicateColors) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "Duplicate color names are not allowed.",
+  });
+}
+
       if (
-        Number.isNaN(numericStock) ||
-        numericStock < 0
+        normalizedColorStock.some(
+          (item) =>
+            !item.color_name ||
+            !Number.isInteger(
+              item.stock_quantity
+            ) ||
+            item.stock_quantity < 0
+        )
       ) {
         return res.status(400).json({
           success: false,
-          message: "Invalid stock value.",
+          message:
+            "Invalid color stock data.",
         });
       }
 
-      const result = await pool.query(
-        `
-        INSERT INTO products (
-          name,
-          category,
-          price,
-          discount_price,
-          description,
-          stock,
-          sizes,
-          colors,
-          new_arrival,
-          best_seller,
-          featured
-        )
-        VALUES (
-          $1, $2, $3, $4, $5,
-          $6, $7, $8, $9, $10, $11
-        )
-        RETURNING *
-        `,
-        [
-          name.trim(),
-          category.trim().toLowerCase(),
-          numericPrice,
-          numericDiscountPrice,
-          description?.trim() || null,
-          numericStock,
-          Array.isArray(sizes) ? sizes : [],
-          Array.isArray(colors) ? colors : [],
-          Boolean(newArrival),
-          Boolean(bestSeller),
-          Boolean(featured),
-        ]
-      );
+const totalStock =
+  normalizedColorStock.reduce(
+    (sum, item) =>
+      sum + item.stock_quantity,
+    0
+  );
 
-      res.status(201).json({
-        success: true,
-        message:
-          "Product added successfully.",
-        product: result.rows[0],
-      });
+      
+  const client = await pool.connect();
 
+try {
+  await client.query("BEGIN");
+
+  const result = await client.query(
+    `
+    INSERT INTO products (
+      name,
+      category,
+      price,
+      discount_price,
+      description,
+      stock,
+      sizes,
+      colors,
+      new_arrival,
+      best_seller,
+      featured
+    )
+    VALUES (
+      $1, $2, $3, $4, $5,
+      $6, $7, $8, $9, $10, $11
+    )
+    RETURNING *
+    `,
+    [
+      name.trim(),
+      category.trim().toLowerCase(),
+      numericPrice,
+      numericDiscountPrice,
+      description?.trim() || null,
+      totalStock,
+      Array.isArray(sizes) ? sizes : [],
+      Array.isArray(colors) ? colors : [],
+      Boolean(newArrival),
+      Boolean(bestSeller),
+      Boolean(featured),
+    ]
+  );
+
+  const product = result.rows[0];
+
+  for (
+    const item of normalizedColorStock
+  ) {
+    await client.query(
+      `
+      INSERT INTO product_color_stock (
+        product_id,
+        color_name,
+        stock_quantity
+      )
+      VALUES ($1, $2, $3)
+      ON CONFLICT (
+        product_id,
+        color_name
+      )
+      DO UPDATE SET
+        stock_quantity =
+          EXCLUDED.stock_quantity,
+        updated_at =
+          CURRENT_TIMESTAMP
+      `,
+      [
+        product.id,
+        item.color_name,
+        item.stock_quantity,
+      ]
+    );
+  }
+
+  await client.query("COMMIT");
+
+  res.status(201).json({
+    success: true,
+    message:
+      "Product added successfully.",
+    product,
+  });
+
+} catch (error) {
+  try {
+    await client.query("ROLLBACK");
+  } catch {
+    // Ignore rollback error
+  }
+
+  throw error;
+
+} finally {
+  client.release();
+}
     } catch (error) {
       console.error(
         "Admin add product error:",
@@ -4383,14 +4504,32 @@ app.get(
       }
 
       const result = await pool.query(
-        `
-        SELECT *
-        FROM products
-        WHERE id = $1
-        `,
-        [productId]
-      );
+  `
+  SELECT
+    p.*,
 
+    COALESCE(
+      (
+        SELECT json_agg(
+          json_build_object(
+            'color_name',
+            pcs.color_name,
+            'stock_quantity',
+            pcs.stock_quantity
+          )
+          ORDER BY pcs.id
+        )
+        FROM product_color_stock pcs
+        WHERE pcs.product_id = p.id
+      ),
+      '[]'::json
+    ) AS color_stock
+
+  FROM products p
+  WHERE p.id = $1
+  `,
+  [productId]
+);
       if (result.rows.length === 0) {
         return res.status(404).json({
           success: false,
@@ -4426,18 +4565,18 @@ app.put(
       const productId = Number(req.params.id);
 
       const {
-        name,
-        category,
-        price,
-        discountPrice,
-        description,
-        stock,
-        sizes,
-        colors,
-        newArrival,
-        bestSeller,
-        featured,
-      } = req.body;
+          name,
+          category,
+          price,
+          discountPrice,
+          description,
+          sizes,
+          colors,
+          colorStock,
+          newArrival,
+          bestSeller,
+          featured,
+        } = req.body;
 
       if (!Number.isInteger(productId)) {
         return res.status(400).json({
@@ -4463,7 +4602,6 @@ app.put(
           ? null
           : Number(discountPrice);
 
-      const numericStock = Number(stock || 0);
 
       if (
         Number.isNaN(numericPrice) ||
@@ -4489,64 +4627,166 @@ app.put(
         });
       }
 
-      if (
-        Number.isNaN(numericStock) ||
-        numericStock < 0
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Invalid stock value.",
-        });
-      }
+      if (!Array.isArray(colorStock)) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "Color-wise stock data is required.",
+  });
+}
 
-      const result = await pool.query(
-        `
-        UPDATE products
-        SET
-          name = $1,
-          category = $2,
-          price = $3,
-          discount_price = $4,
-          description = $5,
-          stock = $6,
-          sizes = $7,
-          colors = $8,
-          new_arrival = $9,
-          best_seller = $10,
-          featured = $11,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE id = $12
-        RETURNING *
-        `,
-        [
-          name.trim(),
-          category.trim().toLowerCase(),
-          numericPrice,
-          numericDiscountPrice,
-          description?.trim() || null,
-          numericStock,
-          Array.isArray(sizes) ? sizes : [],
-          Array.isArray(colors) ? colors : [],
-          Boolean(newArrival),
-          Boolean(bestSeller),
-          Boolean(featured),
-          productId,
-        ]
-      );
+      const normalizedColorStock =
+  colorStock.map((item) => ({
+    color_name: String(
+      item.color_name || ""
+    ).trim(),
 
-      if (result.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          message: "Product not found.",
-        });
-      }
+    stock_quantity: Number(
+      item.stock_quantity || 0
+    ),
+  }));
+    
+const normalizedColorNames =
+  normalizedColorStock.map((item) =>
+    item.color_name.toLowerCase()
+  );
 
-      res.json({
-        success: true,
-        message:
-          "Product updated successfully.",
-        product: result.rows[0],
-      });
+const hasDuplicateColors =
+  new Set(normalizedColorNames).size !==
+  normalizedColorNames.length;
+
+if (hasDuplicateColors) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "Duplicate color names are not allowed.",
+  });
+}
+
+
+if (
+  normalizedColorStock.some(
+    (item) =>
+      !item.color_name ||
+      !Number.isInteger(
+        item.stock_quantity
+      ) ||
+      item.stock_quantity < 0
+  )
+) {
+  return res.status(400).json({
+    success: false,
+    message:
+      "Invalid color stock data.",
+  });
+}
+
+const totalStock =
+  normalizedColorStock.reduce(
+    (sum, item) =>
+      sum + item.stock_quantity,
+    0
+  );
+
+const client = await pool.connect();
+
+try {
+  await client.query("BEGIN");
+
+  const result = await client.query(
+    `
+    UPDATE products
+    SET
+      name = $1,
+      category = $2,
+      price = $3,
+      discount_price = $4,
+      description = $5,
+      stock = $6,
+      sizes = $7,
+      colors = $8,
+      new_arrival = $9,
+      best_seller = $10,
+      featured = $11,
+      updated_at = CURRENT_TIMESTAMP
+    WHERE id = $12
+    RETURNING *
+    `,
+    [
+      name.trim(),
+      category.trim().toLowerCase(),
+      numericPrice,
+      numericDiscountPrice,
+      description?.trim() || null,
+      totalStock,
+      Array.isArray(sizes) ? sizes : [],
+      Array.isArray(colors) ? colors : [],
+      Boolean(newArrival),
+      Boolean(bestSeller),
+      Boolean(featured),
+      productId,
+    ]
+  );
+
+  if (result.rows.length === 0) {
+    await client.query("ROLLBACK");
+
+    return res.status(404).json({
+      success: false,
+      message: "Product not found.",
+    });
+  }
+
+  await client.query(
+    `
+    DELETE FROM product_color_stock
+    WHERE product_id = $1
+    `,
+    [productId]
+  );
+
+  for (
+    const item of normalizedColorStock
+  ) {
+    await client.query(
+      `
+      INSERT INTO product_color_stock (
+        product_id,
+        color_name,
+        stock_quantity
+      )
+      VALUES ($1, $2, $3)
+      `,
+      [
+        productId,
+        item.color_name,
+        item.stock_quantity,
+      ]
+    );
+  }
+
+  await client.query("COMMIT");
+
+  res.json({
+    success: true,
+    message:
+      "Product updated successfully.",
+    product: result.rows[0],
+  });
+
+} catch (error) {
+  try {
+    await client.query("ROLLBACK");
+  } catch {
+    // Ignore rollback error
+  }
+
+  throw error;
+
+} finally {
+  client.release();
+}
+
     } catch (error) {
       console.error(
         "Admin update product error:",

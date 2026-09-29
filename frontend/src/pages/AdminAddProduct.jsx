@@ -10,9 +10,9 @@ function AdminAddProduct() {
     price: "",
     discountPrice: "",
     description: "",
-    stock: "",
     sizes: "",
     colors: "",
+    colorStock: [],
     newArrival: false,
     bestSeller: false,
     featured: false,
@@ -32,6 +32,34 @@ function AdminAddProduct() {
           : value,
     }));
   };
+
+
+  const buildColorStock = (colorsText) => {
+  const colorNames = colorsText
+    .split(",")
+    .map((color) => color.trim())
+    .filter(Boolean);
+
+  setFormData((prev) => ({
+    ...prev,
+    colorStock: colorNames.map(
+      (colorName) => {
+        const existing =
+          prev.colorStock.find(
+            (item) =>
+              item.color_name.toLowerCase() ===
+              colorName.toLowerCase()
+          );
+
+        return {
+          color_name: colorName,
+          stock_quantity:
+            existing?.stock_quantity ?? "",
+        };
+      }
+    ),
+  }));
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -69,9 +97,9 @@ function AdminAddProduct() {
             price: formData.price,
             discountPrice: formData.discountPrice,
             description: formData.description,
-            stock: formData.stock,
             sizes,
             colors,
+            colorStock: formData.colorStock,
             newArrival: formData.newArrival,
             bestSeller: formData.bestSeller,
             featured: formData.featured,
@@ -185,17 +213,7 @@ function AdminAddProduct() {
               />
             </div>
 
-            <div className="admin-form-field">
-              <label>Stock</label>
-
-              <input
-                type="number"
-                name="stock"
-                min="0"
-                value={formData.stock}
-                onChange={handleChange}
-              />
-            </div>
+            
 
             <div className="admin-form-field">
               <label>Sizes</label>
@@ -216,10 +234,65 @@ function AdminAddProduct() {
                 type="text"
                 name="colors"
                 value={formData.colors}
-                onChange={handleChange}
+                onChange={(e) => {
+                  handleChange(e);
+                  buildColorStock(e.target.value);
+                }}
                 placeholder="Black, White, Blue"
               />
             </div>
+
+            {formData.colorStock.length > 0 && (
+              <div className="admin-form-field full-width">
+                <label>Color-wise Stock</label>
+
+                <div className="admin-color-stock-list">
+                  {formData.colorStock.map(
+                    (item, index) => (
+                      <div
+                        key={`${item.color_name}-${index}`}
+                        className="admin-color-stock-row"
+                      >
+                        <span>
+                          {item.color_name}
+                        </span>
+
+                        <input
+                          type="number"
+                          min="0"
+                          step="1"
+                          value={item.stock_quantity}
+                          onChange={(e) => {
+                            const value =
+                              e.target.value;
+
+                            setFormData((prev) => ({
+                              ...prev,
+                              colorStock:
+                                prev.colorStock.map(
+                                  (
+                                    colorItem,
+                                    colorIndex
+                                  ) =>
+                                    colorIndex === index
+                                      ? {
+                                          ...colorItem,
+                                          stock_quantity:
+                                            value,
+                                        }
+                                      : colorItem
+                                ),
+                            }));
+                          }}
+                          placeholder="Stock"
+                          required
+                        />
+                      </div>
+                    )
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className="admin-form-field full-width">
               <label>Description</label>
