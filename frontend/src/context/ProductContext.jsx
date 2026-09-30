@@ -1,11 +1,27 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 const ProductContext = createContext();
 
-export function ProductProvider({ children }) {
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
+export function ProductProvider({
+  children,
+}) {
+  const [products, setProducts] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [error, setError] =
+    useState("");
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -13,68 +29,99 @@ export function ProductProvider({ children }) {
         setLoading(true);
 
         const response = await fetch(
-          "https://api.lanawardrobe.in/api/products"
+          `${API_URL}/api/products`
         );
 
         if (!response.ok) {
-          throw new Error("Failed to fetch products");
+          throw new Error(
+            "Failed to fetch products"
+          );
         }
 
-        const data = await response.json();
+        const data =
+          await response.json();
 
-        /*
-          PostgreSQL uses names like:
-          discount_price
-          new_arrival
+        const formattedProducts =
+          data.products.map(
+            (product) => ({
+              id: product.id,
+              name: product.name,
+              category:
+                product.category,
 
-          Our React frontend currently expects:
-          discountPrice
-          newArrival
+              price:
+                Number(product.price),
 
-          So we convert them here.
-        */
+              discountPrice:
+                product.discount_price
+                  ? Number(
+                      product.discount_price
+                    )
+                  : null,
 
-        const formattedProducts = data.products.map((product) => ({
-          id: product.id,
-          name: product.name,
-          category: product.category,
+              description:
+                product.description,
 
-          price: Number(product.price),
+              stock:
+                Number(
+                  product.stock
+                ) || 0,
 
-          discountPrice: product.discount_price
-            ? Number(product.discount_price)
-            : null,
+              sizes:
+                product.sizes || [],
 
-          description: product.description,
-          stock: product.stock,
+              colors:
+                product.colors || [],
 
-            sizes: product.sizes || [],
-            colors: product.colors || [],
+              colorStock:
+                Array.isArray(
+                  product.color_stock
+                )
+                  ? product.color_stock.map(
+                      (item) => ({
+                        colorName:
+                          item.color_name ||
+                          "",
 
-            colorStock: Array.isArray(product.color_stock)
-              ? product.color_stock.map((item) => ({
-                  colorName:
-                    item.color_name || "",
-                  stockQuantity:
-                    Number(item.stock_quantity) || 0,
-                }))
-              : [],
+                        stockQuantity:
+                          Number(
+                            item.stock_quantity
+                          ) || 0,
+                      })
+                    )
+                  : [],
 
-          imageUrl: product.image_url,
+              imageUrl:
+                product.image_url,
 
-          newArrival: product.new_arrival,
-          bestSeller: product.best_seller,
-          featured: product.featured,
+              newArrival:
+                product.new_arrival,
 
-          createdAt: product.created_at,
-        }));
+              bestSeller:
+                product.best_seller,
 
-        setProducts(formattedProducts);
+              featured:
+                product.featured,
+
+              createdAt:
+                product.created_at,
+            })
+          );
+
+        setProducts(
+          formattedProducts
+        );
+
         setError("");
       } catch (error) {
-        console.error("Product loading error:", error);
+        console.error(
+          "Product loading error:",
+          error
+        );
 
-        setError("Unable to load products.");
+        setError(
+          "Unable to load products."
+        );
       } finally {
         setLoading(false);
       }
@@ -97,5 +144,7 @@ export function ProductProvider({ children }) {
 }
 
 export function useProducts() {
-  return useContext(ProductContext);
+  return useContext(
+    ProductContext
+  );
 }

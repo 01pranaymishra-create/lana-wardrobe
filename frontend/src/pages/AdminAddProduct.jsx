@@ -1,28 +1,45 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
 function AdminAddProduct() {
   const navigate = useNavigate();
 
-  const [formData, setFormData] = useState({
-    name: "",
-    category: "",
-    price: "",
-    discountPrice: "",
-    description: "",
-    sizes: "",
-    colors: "",
-    colorStock: [],
-    newArrival: false,
-    bestSeller: false,
-    featured: false,
-  });
+  const [formData, setFormData] =
+    useState({
+      name: "",
+      category: "",
+      price: "",
+      discountPrice: "",
+      description: "",
+      sizes: "",
+      colors: "",
+      colorStock: [],
+      newArrival: false,
+      bestSeller: false,
+      featured: false,
+    });
 
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [loading, setLoading] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  // =========================
+  // NORMAL FORM CHANGES
+  // =========================
 
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const {
+      name,
+      value,
+      type,
+      checked,
+    } = e.target;
 
     setFormData((prev) => ({
       ...prev,
@@ -33,33 +50,92 @@ function AdminAddProduct() {
     }));
   };
 
+  // =========================
+  // COLORS + COLOR STOCK
+  // =========================
 
-  const buildColorStock = (colorsText) => {
-  const colorNames = colorsText
-    .split(",")
-    .map((color) => color.trim())
-    .filter(Boolean);
+  const handleColorsChange = (e) => {
+    const colorsText =
+      e.target.value;
 
-  setFormData((prev) => ({
-    ...prev,
-    colorStock: colorNames.map(
-      (colorName) => {
-        const existing =
-          prev.colorStock.find(
-            (item) =>
-              item.color_name.toLowerCase() ===
-              colorName.toLowerCase()
-          );
+    const colorNames =
+      colorsText
+        .split(",")
+        .map((color) =>
+          color.trim()
+        )
+        .filter(Boolean);
 
-        return {
-          color_name: colorName,
-          stock_quantity:
-            existing?.stock_quantity ?? "",
-        };
-      }
-    ),
-  }));
-};
+    setFormData((prev) => {
+      const nextColorStock =
+        colorNames.map(
+          (colorName) => {
+            const existing =
+              prev.colorStock.find(
+                (item) =>
+                  String(
+                    item.color_name
+                  ).toLowerCase() ===
+                  colorName.toLowerCase()
+              );
+
+            return {
+              color_name:
+                colorName,
+
+              stock_quantity:
+                existing
+                  ? existing.stock_quantity
+                  : "",
+            };
+          }
+        );
+
+      return {
+        ...prev,
+        colors: colorsText,
+        colorStock:
+          nextColorStock,
+      };
+    });
+  };
+
+  // =========================
+  // COLOR STOCK CHANGE
+  // =========================
+
+  const handleColorStockChange = (
+    index,
+    value
+  ) => {
+    // Prevent negative stock.
+    if (
+      value !== "" &&
+      Number(value) < 0
+    ) {
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+
+      colorStock:
+        prev.colorStock.map(
+          (item, itemIndex) =>
+            itemIndex === index
+              ? {
+                  ...item,
+                  stock_quantity:
+                    value,
+                }
+              : item
+        ),
+    }));
+  };
+
+  // =========================
+  // SUBMIT
+  // =========================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -69,45 +145,120 @@ function AdminAddProduct() {
 
     try {
       const token =
-        localStorage.getItem("lana_token");
+        localStorage.getItem(
+          "lana_token"
+        );
 
-      const sizes = formData.sizes
-        .split(",")
-        .map((size) => size.trim())
-        .filter(Boolean);
+      const sizes =
+        formData.sizes
+          .split(",")
+          .map((size) =>
+            size.trim()
+          )
+          .filter(Boolean);
 
-      const colors = formData.colors
-        .split(",")
-        .map((color) => color.trim())
-        .filter(Boolean);
+      const colors =
+        formData.colors
+          .split(",")
+          .map((color) =>
+            color.trim()
+          )
+          .filter(Boolean);
 
-      const response = await fetch(
-        "https://api.lanawardrobe.in/api/admin/products",
-        {
-          method: "POST",
+      if (colors.length === 0) {
+        throw new Error(
+          "Please add at least one color."
+        );
+      }
 
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+      if (
+        formData.colorStock.length !==
+        colors.length
+      ) {
+        throw new Error(
+          "Color-wise stock is incomplete."
+        );
+      }
 
-          body: JSON.stringify({
-            name: formData.name,
-            category: formData.category,
-            price: formData.price,
-            discountPrice: formData.discountPrice,
-            description: formData.description,
-            sizes,
-            colors,
-            colorStock: formData.colorStock,
-            newArrival: formData.newArrival,
-            bestSeller: formData.bestSeller,
-            featured: formData.featured,
-          }),
-        }
-      );
+      const colorStock =
+        formData.colorStock.map(
+          (item) => ({
+            color_name:
+              item.color_name,
 
-      const data = await response.json();
+            stock_quantity:
+              Number(
+                item.stock_quantity
+              ),
+          })
+        );
+
+      const invalidStock =
+        colorStock.some(
+          (item) =>
+            !Number.isInteger(
+              item.stock_quantity
+            ) ||
+            item.stock_quantity < 0
+        );
+
+      if (invalidStock) {
+        throw new Error(
+          "Please enter a valid stock quantity for every color."
+        );
+      }
+
+      const response =
+        await fetch(
+          `${API_URL}/api/admin/products`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+
+              Authorization:
+                `Bearer ${token}`,
+            },
+
+            body:
+              JSON.stringify({
+                name:
+                  formData.name,
+
+                category:
+                  formData.category,
+
+                price:
+                  formData.price,
+
+                discountPrice:
+                  formData.discountPrice,
+
+                description:
+                  formData.description,
+
+                sizes,
+
+                colors,
+
+                colorStock,
+
+                newArrival:
+                  formData.newArrival,
+
+                bestSeller:
+                  formData.bestSeller,
+
+                featured:
+                  formData.featured,
+              }),
+          }
+        );
+
+      const data =
+        await response.json();
 
       if (!response.ok) {
         throw new Error(
@@ -116,10 +267,13 @@ function AdminAddProduct() {
         );
       }
 
-      alert("Product added successfully.");
+      alert(
+        "Product added successfully."
+      );
 
-      navigate("/admin/products");
-
+      navigate(
+        "/admin/products"
+      );
     } catch (error) {
       console.error(
         "Add product error:",
@@ -130,7 +284,6 @@ function AdminAddProduct() {
         error.message ||
           "Failed to add product."
       );
-
     } finally {
       setLoading(false);
     }
@@ -139,14 +292,18 @@ function AdminAddProduct() {
   return (
     <main className="admin-page">
       <section className="admin-product-form-section">
-
         <div className="admin-product-form-header">
-          <p>LANA WARDROBE ADMIN</p>
+          <p>
+            LANA WARDROBE ADMIN
+          </p>
 
-          <h1>Add Product</h1>
+          <h1>
+            Add Product
+          </h1>
 
           <p>
-            Create a new product for your store.
+            Create a new product
+            for your store.
           </p>
         </div>
 
@@ -154,7 +311,6 @@ function AdminAddProduct() {
           className="admin-product-form"
           onSubmit={handleSubmit}
         >
-
           {error && (
             <p className="admin-form-error">
               {error}
@@ -162,159 +318,201 @@ function AdminAddProduct() {
           )}
 
           <div className="admin-form-grid">
-
             <div className="admin-form-field">
-              <label>Product Name</label>
+              <label>
+                Product Name
+              </label>
 
               <input
                 type="text"
                 name="name"
-                value={formData.name}
-                onChange={handleChange}
+                value={
+                  formData.name
+                }
+                onChange={
+                  handleChange
+                }
                 required
               />
             </div>
 
             <div className="admin-form-field">
-              <label>Category</label>
+              <label>
+                Category
+              </label>
 
               <input
                 type="text"
                 name="category"
-                value={formData.category}
-                onChange={handleChange}
+                value={
+                  formData.category
+                }
+                onChange={
+                  handleChange
+                }
                 placeholder="men, women, unisex..."
                 required
               />
             </div>
 
             <div className="admin-form-field">
-              <label>Price</label>
+              <label>
+                Price
+              </label>
 
               <input
                 type="number"
                 name="price"
                 min="0"
-                value={formData.price}
-                onChange={handleChange}
+                value={
+                  formData.price
+                }
+                onChange={
+                  handleChange
+                }
                 required
               />
             </div>
 
             <div className="admin-form-field">
-              <label>Discount Price</label>
+              <label>
+                Discount Price
+              </label>
 
               <input
                 type="number"
                 name="discountPrice"
                 min="0"
-                value={formData.discountPrice}
-                onChange={handleChange}
+                value={
+                  formData
+                    .discountPrice
+                }
+                onChange={
+                  handleChange
+                }
               />
             </div>
 
-            
-
             <div className="admin-form-field">
-              <label>Sizes</label>
+              <label>
+                Sizes
+              </label>
 
               <input
                 type="text"
                 name="sizes"
-                value={formData.sizes}
-                onChange={handleChange}
+                value={
+                  formData.sizes
+                }
+                onChange={
+                  handleChange
+                }
                 placeholder="S, M, L, XL"
               />
             </div>
 
             <div className="admin-form-field full-width">
-              <label>Colors</label>
+              <label>
+                Colors
+              </label>
 
               <input
                 type="text"
                 name="colors"
-                value={formData.colors}
-                onChange={(e) => {
-                  handleChange(e);
-                  buildColorStock(e.target.value);
-                }}
+                value={
+                  formData.colors
+                }
+                onChange={
+                  handleColorsChange
+                }
                 placeholder="Black, White, Blue"
               />
             </div>
 
-            {formData.colorStock.length > 0 && (
+            {formData
+              .colorStock
+              .length > 0 && (
               <div className="admin-form-field full-width">
-                <label>Color-wise Stock</label>
+                <label>
+                  Color-wise Stock
+                </label>
 
                 <div className="admin-color-stock-list">
-                  {formData.colorStock.map(
-                    (item, index) => (
-                      <div
-                        key={`${item.color_name}-${index}`}
-                        className="admin-color-stock-row"
-                      >
-                        <span>
-                          {item.color_name}
-                        </span>
+                  {formData
+                    .colorStock
+                    .map(
+                      (
+                        item,
+                        index
+                      ) => (
+                        <div
+                          key={`${item.color_name}-${index}`}
+                          className="admin-color-stock-row"
+                        >
+                          <span>
+                            {
+                              item.color_name
+                            }
+                          </span>
 
-                        <input
-                          type="number"
-                          min="0"
-                          step="1"
-                          value={item.stock_quantity}
-                          onChange={(e) => {
-                            const value =
-                              e.target.value;
-
-                            setFormData((prev) => ({
-                              ...prev,
-                              colorStock:
-                                prev.colorStock.map(
-                                  (
-                                    colorItem,
-                                    colorIndex
-                                  ) =>
-                                    colorIndex === index
-                                      ? {
-                                          ...colorItem,
-                                          stock_quantity:
-                                            value,
-                                        }
-                                      : colorItem
-                                ),
-                            }));
-                          }}
-                          placeholder="Stock"
-                          required
-                        />
-                      </div>
-                    )
-                  )}
+                          <input
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={
+                              item.stock_quantity
+                            }
+                            onChange={(
+                              e
+                            ) =>
+                              handleColorStockChange(
+                                index,
+                                e
+                                  .target
+                                  .value
+                              )
+                            }
+                            placeholder="Stock"
+                            required
+                          />
+                        </div>
+                      )
+                    )}
                 </div>
               </div>
             )}
 
             <div className="admin-form-field full-width">
-              <label>Description</label>
+              <label>
+                Description
+              </label>
 
               <textarea
                 name="description"
                 rows="5"
-                value={formData.description}
-                onChange={handleChange}
+                value={
+                  formData
+                    .description
+                }
+                onChange={
+                  handleChange
+                }
               />
             </div>
-
           </div>
 
           <div className="admin-form-checkboxes">
-
             <label>
               <input
                 type="checkbox"
                 name="newArrival"
-                checked={formData.newArrival}
-                onChange={handleChange}
+                checked={
+                  formData
+                    .newArrival
+                }
+                onChange={
+                  handleChange
+                }
               />
               New Arrival
             </label>
@@ -323,8 +521,13 @@ function AdminAddProduct() {
               <input
                 type="checkbox"
                 name="bestSeller"
-                checked={formData.bestSeller}
-                onChange={handleChange}
+                checked={
+                  formData
+                    .bestSeller
+                }
+                onChange={
+                  handleChange
+                }
               />
               Best Seller
             </label>
@@ -333,20 +536,24 @@ function AdminAddProduct() {
               <input
                 type="checkbox"
                 name="featured"
-                checked={formData.featured}
-                onChange={handleChange}
+                checked={
+                  formData.featured
+                }
+                onChange={
+                  handleChange
+                }
               />
               Featured
             </label>
-
           </div>
 
           <div className="admin-form-actions">
-
             <button
               type="button"
               onClick={() =>
-                navigate("/admin/products")
+                navigate(
+                  "/admin/products"
+                )
               }
             >
               Cancel
@@ -360,9 +567,7 @@ function AdminAddProduct() {
                 ? "Adding..."
                 : "Add Product"}
             </button>
-
           </div>
-
         </form>
       </section>
     </main>

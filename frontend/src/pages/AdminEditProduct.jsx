@@ -9,6 +9,10 @@ import {
   useParams,
 } from "react-router-dom";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
 function AdminEditProduct() {
   const navigate = useNavigate();
   const { id } = useParams();
@@ -56,7 +60,7 @@ function AdminEditProduct() {
     async () => {
       try {
         const response = await fetch(
-          `https://api.lanawardrobe.in/api/products/${id}/images`
+          `${API_URL}/api/products/${id}/images`
         );
 
         const data = await response.json();
@@ -94,7 +98,7 @@ function AdminEditProduct() {
           );
 
         const response = await fetch(
-          `https://api.lanawardrobe.in/api/admin/products/${id}`,
+          `${API_URL}/api/admin/products/${id}`,
           {
             headers: {
               Authorization:
@@ -335,7 +339,7 @@ const buildColorStock = (colorsText) => {
 
         const response =
           await fetch(
-            `https://api.lanawardrobe.in/api/admin/products/${id}/images`,
+            `${API_URL}/api/admin/products/${id}/images`,
             {
               method: "POST",
 
@@ -398,7 +402,7 @@ const handleSetPrimary = async (imageId) => {
     const token = localStorage.getItem("lana_token");
 
     const response = await fetch(
-      `https://api.lanawardrobe.in/api/admin/products/${id}/images/${imageId}/primary`,
+      `${API_URL}/api/admin/products/${id}/images/${imageId}/primary`,
       {
         method: "PUT",
         headers: {
@@ -441,7 +445,7 @@ const handleDeleteImage = async (imageId) => {
     const token = localStorage.getItem("lana_token");
 
     const response = await fetch(
-      `https://api.lanawardrobe.in/api/admin/products/${id}/images/${imageId}`,
+      `${API_URL}/api/admin/products/${id}/images/${imageId}`,
       {
         method: "DELETE",
         headers: {
@@ -868,7 +872,7 @@ const handleDeleteImage = async (imageId) => {
       src={
         image.image_url.startsWith("http")
           ? image.image_url
-          : `https://api.lanawardrobe.in${image.image_url}`
+          : `${API_URL}${image.image_url}`
       }
       alt="Product"
     />
