@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate, } from "react-router-dom";
 
 import { useCart } from "../context/CartContext";
 
@@ -45,6 +45,7 @@ function Checkout() {
 } = useCart();
 
 const location = useLocation();
+const navigate = useNavigate();
 
 const buyNowItem =
   location.state?.buyNowItem || null;
@@ -186,16 +187,15 @@ const handleSubmit = async (e) => {
     // CASH ON DELIVERY
     // =========================
 
-    if (paymentMethod === "cod") {
-    if (!buyNowItem) {
-      clearCart();
-    }
-      alert(
-        `Order #${lanaOrder.id} placed successfully with Cash on Delivery.`
-      );
+  if (paymentMethod === "cod") {
+  if (!buyNowItem) {
+    clearCart();
+  }
+  alert(`Order #${lanaOrder.id} placed successfully!`);
+  navigate("/orders");
 
-      return;
-    }
+  return;
+}
 
     // =========================
     // ONLINE PAYMENT
@@ -394,13 +394,11 @@ const handleSubmit = async (e) => {
             return;
           }
 
-          if (!buyNowItem) {
+         if (!buyNowItem) {
             clearCart();
           }
-
-          alert(
-            `Payment successful! Order #${lanaOrder.id} confirmed.`
-          );
+          alert(`Order #${lanaOrder.id} placed successfully!`);
+          navigate("/orders");
 
         } catch (error) {
           console.error(
