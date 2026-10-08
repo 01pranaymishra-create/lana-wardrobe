@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
 
 function AdminRequests() {
   const [activeTab, setActiveTab] = useState("bulk");
@@ -50,17 +53,17 @@ function AdminRequests() {
           contactResponse,
         ] = await Promise.all([
           fetch(
-            "https://api.lanawardrobe.in/api/admin/bulk-order-requests",
+           `${API_URL}/api/admin/bulk-order-requests`,
             { headers }
           ),
 
           fetch(
-            "https://api.lanawardrobe.in/api/admin/customization-requests",
+            `${API_URL}/api/admin/customization-requests`,
             { headers }
           ),
 
           fetch(
-            "https://api.lanawardrobe.in/api/admin/contact-messages",
+            `${API_URL}/api/admin/contact-messages`,
             { headers }
           ),
         ]);
@@ -190,11 +193,11 @@ const formatStatus = (status) => {
     return designFilePath;
   }
 
-  return `https://api.lanawardrobe.in${
-    designFilePath.startsWith("/")
-      ? ""
-      : "/"
-  }${designFilePath}`;
+  return `${API_URL}${
+  designFilePath.startsWith("/")
+    ? ""
+    : "/"
+}${designFilePath}`;
 };
 
 const downloadDesign = async (
@@ -217,7 +220,7 @@ const downloadDesign = async (
     }
 
     const response = await fetch(
-      `https://api.lanawardrobe.in/api/admin/request-design/${type}/${id}/download`,
+      `${API_URL}/api/admin/request-design/${type}/${id}/download`,
       {
         headers: {
           Authorization:
@@ -301,17 +304,17 @@ const downloadDesign = async (
 
       if (type === "bulk") {
         url =
-          `https://api.lanawardrobe.in/api/admin/bulk-order-requests/${id}/status`;
+          `${API_URL}/api/admin/bulk-order-requests/${id}/status`;
       } else if (
         type === "customization"
       ) {
         url =
-          `https://api.lanawardrobe.in/api/admin/customization-requests/${id}/status`;
+          `${API_URL}/api/admin/customization-requests/${id}/status`;
       } else if (
         type === "contact"
       ) {
         url =
-          `https://api.lanawardrobe.in/api/admin/contact-messages/${id}/status`;
+          `${API_URL}/api/admin/contact-messages/${id}/status`;
       } else {
         throw new Error(
           "Invalid request type."

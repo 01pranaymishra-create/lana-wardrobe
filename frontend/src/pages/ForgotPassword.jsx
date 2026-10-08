@@ -2,6 +2,10 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "./Auth.css";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
 function ForgotPassword() {
   const navigate = useNavigate();
 
@@ -20,7 +24,7 @@ function ForgotPassword() {
       setSubmitting(true);
 
       const response = await fetch(
-        "https://api.lanawardrobe.in/api/auth/forgot-password",
+        `${API_URL}/api/auth/forgot-password`,
         {
           method: "POST",
           headers: {

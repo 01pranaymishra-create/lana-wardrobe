@@ -7,6 +7,10 @@ import {
   Link,
 } from "react-router-dom";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
 function YourOrders() {
   const [orders, setOrders] = useState([]);
 
@@ -56,7 +60,7 @@ function YourOrders() {
           );
 
         const response = await fetch(
-          "https://api.lanawardrobe.in/api/orders/my-orders",
+          `${API_URL}/api/orders/my-orders`,
           {
             headers: {
               Authorization:
@@ -377,7 +381,7 @@ function YourOrders() {
                                     "http"
                                   )
                                     ? item.image_url
-                                    : `https://api.lanawardrobe.in${item.image_url}`
+                                    : `${API_URL}${item.image_url}`
                                 }
                                 alt={
                                   item.product_name

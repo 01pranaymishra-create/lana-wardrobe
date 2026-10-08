@@ -7,6 +7,10 @@ import {
 
 import "./Auth.css";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
 function ResetPassword() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -63,7 +67,7 @@ function ResetPassword() {
       setSubmitting(true);
 
       const response = await fetch(
-        "https://api.lanawardrobe.in/api/auth/reset-password",
+        `${API_URL}/api/auth/reset-password`,
         {
           method: "POST",
           headers: {

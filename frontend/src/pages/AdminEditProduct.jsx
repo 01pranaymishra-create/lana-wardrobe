@@ -510,7 +510,7 @@ const handleDeleteImage = async (imageId) => {
 
         const response =
           await fetch(
-            `https://api.lanawardrobe.in/api/admin/products/${id}`,
+            `${API_URL}/api/admin/products/${id}`,
             {
               method: "PUT",
 

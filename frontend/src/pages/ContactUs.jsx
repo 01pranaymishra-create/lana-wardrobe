@@ -1,6 +1,10 @@
 import { useState } from "react";
 import "./ContactUs.css";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
 function ContactUs() {
   const [formData, setFormData] = useState({
     name: "",
@@ -44,7 +48,7 @@ function ContactUs() {
       setSubmitting(true);
 
       const response = await fetch(
-        "https://api.lanawardrobe.in/api/contact-messages",
+        `${API_URL}/api/contact-messages`,
         {
           method: "POST",
           headers: {

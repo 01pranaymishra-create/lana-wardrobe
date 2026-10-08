@@ -3,6 +3,10 @@ import {
   useState,
 } from "react";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
 function AdminShipping() {
   const [readyOrders, setReadyOrders] =
     useState([]);
@@ -74,7 +78,7 @@ function AdminShipping() {
         shipmentsResponse,
       ] = await Promise.all([
         fetch(
-          "https://api.lanawardrobe.in/api/admin/shipping/ready-orders",
+          `${API_URL}/api/admin/shipping/ready-orders`,
           {
             headers: {
               Authorization:
@@ -84,7 +88,7 @@ function AdminShipping() {
         ),
 
         fetch(
-          "https://api.lanawardrobe.in/api/admin/shipments",
+          `${API_URL}/api/admin/shipments`,
           {
             headers: {
               Authorization:
@@ -317,7 +321,7 @@ function AdminShipping() {
 
         const response =
   await fetch(
-    `https://api.lanawardrobe.in/api/admin/ekart/create-shipment/${order.id}`,
+    `${API_URL}/api/admin/ekart/create-shipment/${order.id}`,
     {
       method: "POST",
 
@@ -540,7 +544,7 @@ function AdminShipping() {
 
         const response =
           await fetch(
-            `https://api.lanawardrobe.in/api/admin/shipments/${shipment.id}`,
+            `${API_URL}/api/admin/shipments/${shipment.id}`,
             {
               method: "PUT",
 
@@ -668,7 +672,7 @@ const handleSyncEkartStatus =
 
       const response =
         await fetch(
-          `https://api.lanawardrobe.in/api/admin/ekart/sync/${encodeURIComponent(
+          `${API_URL}/api/admin/ekart/sync/${encodeURIComponent(
             trackingId
           )}`,
           {

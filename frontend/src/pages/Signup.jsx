@@ -12,6 +12,10 @@ import {
 import "./Auth.css";
 import { useAuth } from "../context/AuthContext";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
 function Signup() {
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -64,7 +68,7 @@ function Signup() {
       setSubmitting(true);
 
       const response = await fetch(
-        "https://api.lanawardrobe.in/api/auth/register",
+        `${API_URL}/api/auth/register`,
         {
           method: "POST",
 
@@ -137,7 +141,7 @@ function Signup() {
         setSubmitting(true);
 
         const response = await fetch(
-          "https://api.lanawardrobe.in/api/auth/google",
+          `${API_URL}/api/auth/google`,
           {
             method: "POST",
 

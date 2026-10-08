@@ -2,6 +2,25 @@ import { Link } from "react-router-dom";
 
 import { useCart } from "../context/CartContext";
 import { useProducts } from "../context/ProductContext";
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
+const getImageUrl = (image) => {
+  if (!image) {
+    return "";
+  }
+
+  if (
+    image.startsWith("http://") ||
+    image.startsWith("https://") ||
+    image.startsWith("data:")
+  ) {
+    return image;
+  }
+
+  return `${API_URL}${image.startsWith("/") ? "" : "/"}${image}`;
+};
 
 function Cart() {
   const {
@@ -259,6 +278,20 @@ function Cart() {
                   ) >
                     availableStock
                 );
+                const currentProduct =
+                  products.find(
+                    (product) =>
+                      Number(product.id) ===
+                      Number(item.id)
+                  );
+
+                const imageUrl = getImageUrl(
+                  item.image_url ||
+                  item.imageUrl ||
+                  item.image ||
+                  currentProduct?.imageUrl ||
+                  currentProduct?.image_url
+                );
 
               return (
                 <div
@@ -267,15 +300,9 @@ function Cart() {
                 >
                   <div className="cart-item-image">
 
-                    {item.image_url ||
-                    item.imageUrl ||
-                    item.image ? (
+                    {imageUrl ? (
                       <img
-                        src={
-                          item.image_url ||
-                          item.imageUrl ||
-                          item.image
-                        }
+                        src={imageUrl}
                         alt={item.name}
                       />
                     ) : (

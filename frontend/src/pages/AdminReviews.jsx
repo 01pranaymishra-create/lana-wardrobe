@@ -3,6 +3,10 @@ import {
   useState,
 } from "react";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
 function AdminReviews() {
   const [
     reviews,
@@ -34,7 +38,7 @@ function AdminReviews() {
 
         const response =
           await fetch(
-            "https://api.lanawardrobe.in/api/admin/reviews",
+            `${API_URL}/api/admin/reviews`,
             {
               headers: {
                 Authorization:
@@ -107,7 +111,7 @@ function AdminReviews() {
 
         const response =
           await fetch(
-            `https://api.lanawardrobe.in/api/admin/reviews/${review.id}/status`,
+           `${API_URL}/api/admin/reviews/${review.id}/status`,
             {
               method: "PUT",
 
@@ -205,7 +209,7 @@ function AdminReviews() {
 
       const response =
         await fetch(
-          `https://api.lanawardrobe.in/api/admin/reviews/${review.id}`,
+          `${API_URL}/api/admin/reviews/${review.id}`,
           {
             method: "DELETE",
 

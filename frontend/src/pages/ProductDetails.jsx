@@ -9,6 +9,10 @@ import { useWishlist } from "../context/WishlistContext";
 import { useProducts } from "../context/ProductContext";
 import { useAuth } from "../context/AuthContext";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
 function ProductDetails() {
   const {
     products,
@@ -150,7 +154,7 @@ const selectedColorOutOfStock =
         try {
           const response =
             await fetch(
-              `https://api.lanawardrobe.in/api/products/${id}/images`
+              `${API_URL}/api/products/${id}/images`
             );
 
           const data =
@@ -208,7 +212,7 @@ const selectedColorOutOfStock =
 
         const response =
           await fetch(
-            `https://api.lanawardrobe.in/api/products/${id}/reviews`
+            `${API_URL}/api/products/${id}/reviews`
           );
 
         const data =
@@ -296,7 +300,7 @@ const selectedColorOutOfStock =
 
         const response =
           await fetch(
-            `https://api.lanawardrobe.in/api/products/${id}/reviews`,
+            `${API_URL}/api/products/${id}/reviews`,
             {
               method: "POST",
 
@@ -508,7 +512,7 @@ const handleBuyNow = () => {
                     "http"
                   )
                     ? selectedImage
-                    : `https://api.lanawardrobe.in${selectedImage}`
+                    : `${API_URL}${selectedImage}`
                 }
                 alt={
                   product.name
@@ -555,7 +559,7 @@ const handleBuyNow = () => {
                           "http"
                         )
                           ? image.image_url
-                          : `https://api.lanawardrobe.in${image.image_url}`
+                          : `${API_URL}${image.image_url}`
                       }
 
                       alt={

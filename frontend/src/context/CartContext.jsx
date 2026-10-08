@@ -152,15 +152,24 @@ export function CartProvider({ children }) {
       return false;
     }
 
-    const cartItem = {
-      ...product,
+    const productImage =
+      product.imageUrl ||
+      product.image_url ||
+      product.image ||
+      "";
 
-      selectedSize,
-      selectedColor,
-      quantity,
+const cartItem = {
+  ...product,
 
-      cartId,
-    };
+  imageUrl: productImage,
+  image_url: productImage,
+
+  selectedSize,
+  selectedColor,
+  quantity,
+
+  cartId,
+};
 
     setCartItems((currentItems) => {
       const currentExistingItem =

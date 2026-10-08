@@ -1,4 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
 
 function AdminOrders() {
   const [orders, setOrders] = useState([]);
@@ -37,7 +40,7 @@ function AdminOrders() {
           localStorage.getItem("lana_token");
 
         const response = await fetch(
-          "https://api.lanawardrobe.in/api/admin/orders",
+          `${API_URL}/api/admin/orders`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -263,7 +266,7 @@ function AdminOrders() {
         );
 
       const response = await fetch(
-        `https://api.lanawardrobe.in/api/admin/orders/${orderId}/status`,
+        `${API_URL}/api/admin/orders/${orderId}/status`,
         {
           method: "PUT",
 
@@ -419,7 +422,7 @@ function AdminOrders() {
         );
 
       const response = await fetch(
-        `https://api.lanawardrobe.in/api/admin/orders/${orderId}/tracking`,
+        `${API_URL}/api/admin/orders/${orderId}/tracking`,
         {
           method: "PUT",
 
@@ -1093,7 +1096,7 @@ function AdminOrders() {
                                         "http"
                                       )
                                         ? item.image_url
-                                        : `https://api.lanawardrobe.in${item.image_url}`
+                                        : `${API_URL}${item.image_url}`
                                     }
                                     alt={
                                       item.product_name

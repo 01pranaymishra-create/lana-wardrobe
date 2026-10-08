@@ -2,6 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
 function Customize() {
     const navigate = useNavigate();
 
@@ -125,7 +129,7 @@ const handleSubmit = async (event) => {
     }
 
     const response = await fetch(
-      "https://api.lanawardrobe.in/api/customization-requests",
+      `${API_URL}/api/customization-requests`,
       {
         method: "POST",
         body: requestData,

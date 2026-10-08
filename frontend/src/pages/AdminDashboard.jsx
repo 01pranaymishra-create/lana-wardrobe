@@ -10,6 +10,10 @@ function AdminDashboard() {
     customers: 0,
   });
 
+  const API_URL =
+    import.meta.env.VITE_API_URL ||
+    "https://api.lanawardrobe.in";
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -21,7 +25,7 @@ function AdminDashboard() {
         const token = localStorage.getItem("lana_token");
 
         const response = await fetch(
-          "https://api.lanawardrobe.in/api/admin/dashboard-summary",
+          `${API_URL}/api/admin/dashboard-summary`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -51,7 +55,7 @@ function AdminDashboard() {
     };
 
     fetchSummary();
-  }, []);
+  }, [API_URL]);
 
   if (loading) {
     return (
@@ -154,6 +158,7 @@ function AdminDashboard() {
           >
             Manage Products
           </button>
+
           <button
             type="button"
             onClick={() =>
@@ -162,6 +167,7 @@ function AdminDashboard() {
           >
             Customer Requests
           </button>
+
           <button
             type="button"
           >
@@ -180,11 +186,11 @@ function AdminDashboard() {
           <button
             type="button"
             onClick={() =>
-                navigate("/admin/customers")
+              navigate("/admin/customers")
             }
-            >
+          >
             Manage Customers
-            </button>
+          </button>
 
           <button
             type="button"
@@ -196,13 +202,14 @@ function AdminDashboard() {
           </button>
 
           <button
-                type="button"
-                onClick={() =>
-                    navigate("/admin/reviews")
-                }
-                >
-                Ratings & Reviews
-                </button>
+            type="button"
+            onClick={() =>
+              navigate("/admin/reviews")
+            }
+          >
+            Ratings & Reviews
+          </button>
+
         </div>
 
       </section>

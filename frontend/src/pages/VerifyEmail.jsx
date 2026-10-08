@@ -6,6 +6,10 @@ import {
 } from "react-router-dom";
 import "./Auth.css";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
 function VerifyEmail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -42,7 +46,7 @@ function VerifyEmail() {
       setSubmitting(true);
 
       const response = await fetch(
-        "https://api.lanawardrobe.in/api/auth/verify-email-otp",
+        `${API_URL}/api/auth/verify-email-otp`,
         {
           method: "POST",
 
@@ -100,7 +104,7 @@ function VerifyEmail() {
       setResending(true);
 
       const response = await fetch(
-        "https://api.lanawardrobe.in/api/auth/resend-email-otp",
+        `${API_URL}/api/auth/resend-email-otp`,
         {
           method: "POST",
 

@@ -1,5 +1,9 @@
 import { Link } from "react-router-dom";
 
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
+
 function ProductCard({ product }) {
   return (
     <Link
@@ -13,7 +17,7 @@ function ProductCard({ product }) {
               src={
                 product.imageUrl.startsWith("http")
                   ? product.imageUrl
-                  : `https://api.lanawardrobe.in${product.imageUrl}`
+                  : `${API_URL}${product.imageUrl}`
               }
               alt={product.name}
               className="product-image"

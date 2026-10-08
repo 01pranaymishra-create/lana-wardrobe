@@ -1,6 +1,12 @@
 import { useState } from "react";
+
 import { useLocation } from "react-router-dom";
+
 import { useCart } from "../context/CartContext";
+
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
 
 function loadRazorpayScript() {
   return new Promise((resolve) => {
@@ -103,7 +109,7 @@ const handleSubmit = async (e) => {
     // =========================
 
     const response = await fetch(
-      "https://api.lanawardrobe.in/api/orders",
+        `${API_URL}/api/orders`,
       {
         method: "POST",
 
@@ -210,7 +216,7 @@ const handleSubmit = async (e) => {
 
     const razorpayResponse =
       await fetch(
-        "https://api.lanawardrobe.in/api/payments/create-razorpay-order",
+        `${API_URL}/api/payments/create-razorpay-order`,
         {
           method: "POST",
 
@@ -293,7 +299,7 @@ const handleSubmit = async (e) => {
     try {
       const abandonResponse =
         await fetch(
-          "https://api.lanawardrobe.in/api/payments/abandon-online-order",
+          `${API_URL}/api/payments/abandon-online-order`,
           {
             method: "POST",
 
@@ -344,7 +350,7 @@ const handleSubmit = async (e) => {
         try {
           const verifyResponse =
             await fetch(
-              "https://api.lanawardrobe.in/api/payments/verify-razorpay-payment",
+              `${API_URL}/api/payments/verify-razorpay-payment`,
               {
                 method: "POST",
 

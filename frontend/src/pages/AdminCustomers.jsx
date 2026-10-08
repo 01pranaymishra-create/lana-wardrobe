@@ -3,6 +3,9 @@ import {
   useMemo,
   useState,
 } from "react";
+const API_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://api.lanawardrobe.in";
 
 function AdminCustomers() {
   const [customers, setCustomers] =
@@ -30,7 +33,7 @@ function AdminCustomers() {
 
           const response =
             await fetch(
-              "https://api.lanawardrobe.in/api/admin/customers",
+              `${API_URL}/api/admin/customers`,
               {
                 headers: {
                   Authorization:
@@ -151,7 +154,7 @@ const handleToggleStatus =
 
       const response =
         await fetch(
-          `https://api.lanawardrobe.in/api/admin/customers/${customer.id}/status`,
+          `${API_URL}/api/admin/customers/${customer.id}/status`,
           {
             method: "PUT",
 
